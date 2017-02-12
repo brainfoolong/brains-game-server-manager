@@ -6,7 +6,7 @@ View.script = function (message) {
         "password2": {"type": "password", "required": true},
         "admin": {"type": "switch"}
     }, function (formData) {
-        View.send({"action": "save", "formData": formData}, function (message) {
+        View.send({"action": "save", "formData": formData, "id" : get("id")}, function (message) {
             if (message === true) {
                 note("saved", "success");
                 View.loadUrl("/users");

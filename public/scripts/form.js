@@ -18,41 +18,50 @@ Form.create = function (container, formName, fields, onSubmit, values) {
     var $form = $('<form>').attr("name", formName).attr("onsubmit", "return false");
     for (var fieldName in fields) {
         var field = fields[fieldName];
+        var fieldNameMatch = fieldName.match(/^(.*?)\[(.*?)\]/);
+        var currentValue = values[fieldName];
+        if (fieldNameMatch) {
+            if (typeof values[fieldNameMatch[1]] != "undefined") {
+                currentValue = values[fieldNameMatch[1]][fieldNameMatch[2]];
+            }
+        }
+        if (typeof currentValue == "undefined") currentValue = field.defaultValue;
+        if (typeof currentValue == "undefined") currentValue = null;
         var $input = null;
         var langKey = formName + '.' + fieldName;
-        var $el = $('<div>' +
+        var $el = $('<div class="form-field">' +
             '<div class="form-label"></div>' +
             '<div class="form-input"></div>' +
             '</div>');
         if (t(langKey + ".title") != langKey + ".title") {
-            $el.find(".form-label").append($("<strong>").text(t(langKey + ".title")));
+            $el.find(".form-label").append($("<strong>").text(t(langKey + ".title", field.lang_parameters)));
         }
         if (t(langKey + ".sub") != langKey + ".sub") {
-            $el.find(".form-label").append($("<small>").text(t(langKey + ".sub")));
+            $el.find(".form-label").append($("<small>").text(t(langKey + ".sub", field.lang_parameters)));
         }
         switch (field.type) {
             case "textarea":
                 $input = $('<textarea class="form-control autoheight" name="' + fieldName + '">');
-                if (typeof values[fieldName] != "undefined") {
-                    $input.val(values[fieldName]);
+                if (currentValue !== null) {
+                    $input.val(currentValue);
                 }
                 break;
             case "number":
-                $input = $('<input type="number" class="form-control" name="' + fieldName + '">');
-                if (typeof values[fieldName] != "undefined") {
-                    $input.val(values[fieldName]);
+                $input = $('<input type="number" class="form-control" name="' + fieldName + ':number">');
+                if (currentValue !== null) {
+                    $input.val(currentValue);
                 }
                 break;
             case "password":
                 $input = $('<input type="password" class="form-control" name="' + fieldName + '">');
-                if (typeof values[fieldName] != "undefined") {
-                    $input.val(values[fieldName]);
+                if (currentValue !== null) {
+                    $input.val(currentValue);
                 }
                 break;
             case "text":
                 $input = $('<input type="text" class="form-control" name="' + fieldName + '">');
-                if (typeof values[fieldName] != "undefined") {
-                    $input.val(values[fieldName]);
+                if (currentValue !== null) {
+                    $input.val(currentValue);
                 }
                 break;
             case "select":
@@ -64,24 +73,32 @@ Form.create = function (container, formName, fields, onSubmit, values) {
                     var valueKey = field.values[i];
                     $input.append($('<option>').attr("value", valueKey).text(t(formName + '.' + fieldName + '.value.' + valueKey)));
                 }
-                if (typeof values[fieldName] != "undefined") {
-                    $input.val(values[fieldName]);
+                if (currentValue !== null) {
+                    $input.val(currentValue);
                 }
                 break;
             case "switch":
-                $input = $('<select class="selectpicker" name="' + fieldName + '">');
+                $input = $('<select class="selectpicker" name="' + fieldName + ':boolean">');
                 var fieldValues = ["yes", "no"];
                 for (var i = 0; i < fieldValues.length; i++) {
                     var valueKey = fieldValues[i];
                     $input.append($('<option>').attr("value", valueKey).text(t(valueKey)));
                 }
-                if (values[fieldName] === true) {
-                    $input.val("yes");
+                if (currentValue !== null) {
+                    $input.val(currentValue ? "true" : "false");
                 }
                 break;
         }
         if (field.required) {
             $input.attr("required", true);
+        }
+        if (field.placeholder) {
+            $input.attr("placeholder", t(field.placeholder, field.lang_parameters));
+        }
+        if (field.attributes) {
+            for (var i in field.attributes) {
+                $input.attr("data-" + i, field.attributes[i]);
+            }
         }
         $el.find(".form-input").append($input);
         $form.append($el);
@@ -94,20 +111,7 @@ Form.create = function (container, formName, fields, onSubmit, values) {
         var f = $(this).closest("form");
         if (f[0].checkValidity()) {
             var formDataJson = f.serializeJSON();
-            var formData = {};
-            for (var fieldName in fields) {
-                var field = fields[fieldName];
-                formData[fieldName] = formDataJson[fieldName];
-                switch (field.type) {
-                    case "number":
-                        formData[fieldName] = parseFloat(formData[fieldName]);
-                        break;
-                    case "switch":
-                        formData[fieldName] = formData[fieldName] === "yes";
-                        break;
-                }
-            }
-            onSubmit(formData);
+            onSubmit(formDataJson);
         } else {
             // on validation error trigger a fake submit button to enable validation UI popup
             $(this).after('<input type="submit">');

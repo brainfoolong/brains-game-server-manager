@@ -61,7 +61,8 @@ View.send = function (message, callback) {
  */
 View.loadUrl = function (url) {
     history.pushState({"url": url}, url, url);
-    var view = url.match(/([a-z_-]+)/i)[1];
-    if (!view || !view.length) view = "index";
+    var viewMatch = url.match(/([a-z_-]+)/i);
+    var view = "index";
+    if (viewMatch) view = viewMatch[1];
     View.load(view);
 };

@@ -499,3 +499,11 @@ body.is-not-admin [data-role='admin'] {
 .form-label strong {
     padding-right: 10px;
 }
+
+.pickserver{
+    margin-bottom: 40px;
+}
+
+.index-server .collapsable-target{
+    margin-bottom: 40px;
+}
