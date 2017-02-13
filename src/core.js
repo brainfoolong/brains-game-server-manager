@@ -1,6 +1,6 @@
 "use strict";
 
-var request = require(__dirname + "/request");
+var request = require("request");
 /**
  * Core
  * @type {object}
@@ -14,9 +14,9 @@ core.latestVersion = "";
  * Fetch latest version for the core
  */
 core.fetchLatestVersion = function () {
-    request.get("https://raw.githubusercontent.com/brainfoolong/brains-game-server-manager/master/package.json", false, function (content) {
-        if (content) {
-            var manifest = JSON.parse(content);
+    request("https://raw.githubusercontent.com/brainfoolong/brains-game-server-manager/master/package.json", function (error, response, body) {
+        if (!error) {
+            var manifest = JSON.parse(body);
             if (manifest && manifest.version) {
                 core.latestVersion = manifest.version;
             }

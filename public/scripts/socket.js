@@ -174,7 +174,7 @@ Socket.connectAndLoadView = function () {
 Socket.send = function (action, message, callback) {
     var receiveCallback = function (receivedMessage) {
         if (receivedMessage && receivedMessage.note) {
-            note(receivedMessage.note.message, receivedMessage.note.type);
+            note(receivedMessage.note.message, receivedMessage.note.type, receivedMessage.note.delay);
         }
         if (receivedMessage && receivedMessage.error) {
             var message = "Server Error: " + receivedMessage.error.message;

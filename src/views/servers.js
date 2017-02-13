@@ -2,6 +2,7 @@
 
 var db = require(__dirname + "/../db");
 var hash = require(__dirname + "/../hash");
+var gameserver = require(__dirname + "/../gameserver");
 var fs = require("fs");
 
 /**
@@ -20,23 +21,23 @@ module.exports = function (user, frontendMessage, callback) {
         var formData = frontendMessage.formData;
         var id = frontendMessage.id || hash.random(32);
         db.get("servers").set(id, formData).value();
-        var serverFolder = __dirname + "/../../servers/" + id;
+        var serverFolder = gameserver.getFolder(id);
         if (!fs.existsSync(serverFolder)) fs.mkdirSync(serverFolder, 0o777);
 
         if (formData.game == "factorio") {
             // create server settings file
             var settingsData = formData.factorio;
-            if(!settingsData.rcon_port){
+            if (!settingsData.rcon_port) {
                 delete settingsData.rcon_port
                 delete settingsData.rcon_password;
             }
             settingsData.tags = settingsData.tags.split(" ");
             settingsData.admins = settingsData.admins.replace(/,[\s]+]/g, "").split(",");
             settingsData.visibility = {
-                "public" : settingsData.visibility && settingsData.visibility.indexOf("public") > -1,
-                "lan" : settingsData.visibility && settingsData.visibility.indexOf("lan") > -1,
+                "public": settingsData.visibility && settingsData.visibility.indexOf("public") > -1,
+                "lan": settingsData.visibility && settingsData.visibility.indexOf("lan") > -1,
             };
-            fs.writeFile(serverFolder+"/server-settings.json", JSON.stringify(settingsData))
+            fs.writeFile(serverFolder + "/server-settings.json", JSON.stringify(settingsData))
         }
         callback(true);
         return;

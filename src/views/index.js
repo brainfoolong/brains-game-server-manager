@@ -1,6 +1,7 @@
 "use strict";
 
 var db = require(__dirname + "/../db");
+var games = require(__dirname + "/../games");
 
 /**
  * The view
@@ -17,8 +18,34 @@ module.exports = function (user, frontendMessage, callback) {
     }
     if (frontendMessage) {
         switch (frontendMessage.action) {
+            case "updateServer":
+                var server = servers[frontendMessage.id];
+                var check = games[server.game].checkRequirements()
+                if (check === true) {
+                    games[server.game].updateServer(frontendMessage.id, function () {
+
+                    });
+                    callback({"note": {"message": "index.update-server.scheduled", "type": "info", "delay": 20000}});
+                } else {
+                    callback({"note": {"message": "missing.requirements", "type": "danger", "delay": 20000}});
+                }
+                return;
+                break;
+            case "getVersions":
+                games.factorio.getStableVersion(function (stableVersion) {
+                    games.factorio.getInstalledVersion(frontendMessage.id, function (installedVersion) {
+                        callback({
+                            "available": stableVersion,
+                            "installed": installedVersion
+                        });
+                    });
+                });
+                return;
+                break;
             case "load":
-                callback(servers[frontendMessage.id]);
+                var server = servers[frontendMessage.id];
+                callback(server);
+                return;
                 break;
         }
     }

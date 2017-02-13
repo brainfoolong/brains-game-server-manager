@@ -10,10 +10,24 @@ View.script = function (message) {
         location.href = "/index?id=" + this.value;
     });
 
-    if(get("id")) {
+    $(".btn.update-server").on("click", function () {
+        Modal.confirm(t("index.update-server.confirm"), function (success) {
+            if (success) {
+                View.send({"action": "updateServer", "id": get("id")}, function () {
+
+                });
+            }
+        });
+    });
+
+    if (get("id")) {
         View.send({"action": "load", "id": get("id")}, function (serverdata) {
-            if(serverdata){
+            if (serverdata) {
                 $(".index-server").removeClass("hidden");
+                View.send({"action": "getVersions", "id": get("id")}, function (versions) {
+                    $(".version-installed").text(versions.installed);
+                    $(".version-available").text(versions.available);
+                });
             }
         });
     }

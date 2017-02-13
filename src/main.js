@@ -23,32 +23,25 @@ if (mode == "start") {
 
 // update core
 if (mode == "update-core") {
-    var request = require(__dirname + "/request");
+    var request = require("request");
     var fs = require("fs");
     var unzip = require("unzip");
-    request.get("https://codeload.github.com/brainfoolong/brains-game-server-manager/zip/master", true, function (contents) {
-        if (!contents.length) {
-            console.error("Cannot load repository zip file");
+    var dir = __dirname + "/..";
+    request("https://codeload.github.com/brainfoolong/brains-game-server-manager/zip/master", function () {
+        fs.createReadStream(dir + "/master.zip").pipe(unzip.Parse()).on('entry', function (entry) {
+            var fileName = entry.path.split("/").slice(1).join("/");
+            if (!fileName.length) return;
+            var path = dir + "/" + fileName;
+            if (entry.type == "Directory") {
+                if (!fs.existsSync(path)) fs.mkdirSync(path, 0o777);
+                entry.autodrain();
+            } else {
+                entry.pipe(fs.createWriteStream(path));
+            }
+        }).on("close", function () {
+            process.stdout.write("Application successfully updated\n");
+            fs.unlinkSync(dir + "/master.zip");
             process.exit(0);
-            return;
-        }
-        var dir = __dirname + "/..";
-        fs.writeFile(dir + "/master.zip", contents, {"mode": 0o777}, function () {
-            fs.createReadStream(dir + "/master.zip").pipe(unzip.Parse()).on('entry', function (entry) {
-                var fileName = entry.path.split("/").slice(1).join("/");
-                if (!fileName.length) return;
-                var path = dir + "/" + fileName;
-                if (entry.type == "Directory") {
-                    if (!fs.existsSync(path)) fs.mkdirSync(path, 0o777);
-                    entry.autodrain();
-                } else {
-                    entry.pipe(fs.createWriteStream(path));
-                }
-            }).on("close", function () {
-                process.stdout.write("Application successfully updated\n");
-                fs.unlinkSync(dir + "/master.zip");
-                process.exit(0);
-            });
         });
-    });
+    }).pipe(fs.createWriteStream(dir + "/master.zip"));
 }
