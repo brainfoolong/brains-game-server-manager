@@ -4,18 +4,19 @@ View.script = function (message) {
     var fields = {
         "game": {"type": "select", "values": ["", "rust", "csgo", "factorio"], "required": true},
         "name": {"type": "text", "required": true},
-        "factorio[name]": {"type": "text", "attributes": {"required": "1", "game-field": "1"}},
-        "factorio[description]": {"type": "text", "attributes": {"required": "1", "game-field": "1"}},
+        "factorio[branch]": {"type": "select", "values" : ["stable", "experimental"], "attributes": {"game-field": "1"}, "defaultValue": 0},
         "factorio[port]": {"type": "number", "attributes": {"game-field": "1"}, "defaultValue": 34197},
         "factorio[rcon_port]": {"type": "number", "attributes": {"game-field": "1"}, "defaultValue": 0},
         "factorio[rcon_password]": {"type": "text", "attributes": {"game-field": "1"}},
+        "factorio[name]": {"type": "text", "attributes": {"required": "1", "game-field": "1"}},
+        "factorio[description]": {"type": "text", "attributes": {"required": "1", "game-field": "1"}},
         "factorio[tags]": {"type": "text", "attributes": {"game-field": "1"}},
         "factorio[max_players]": {"type": "number", "attributes": {"game-field": "1"}},
         "factorio[visibility]": {
             "type": "select",
             "multiple": true,
             "values": ["public", "lan"],
-            "attributes": {"game-field": "1"}
+            "attributes": {"game-field": "1", "required" : "1"}
         },
         "factorio[username]": {"type": "text", "attributes": {"game-field": "1"}},
         "factorio[password]": {"type": "text", "attributes": {"game-field": "1"}},

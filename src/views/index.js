@@ -1,7 +1,9 @@
 "use strict";
 
+var fs = require("fs");
 var db = require(__dirname + "/../db");
 var games = require(__dirname + "/../games");
+var gameserver = require(__dirname + "/../gameserver");
 
 /**
  * The view
@@ -27,13 +29,20 @@ module.exports = function (user, frontendMessage, callback) {
                     });
                     callback({"note": {"message": "index.update-server.scheduled", "type": "info", "delay": 20000}});
                 } else {
-                    callback({"note": {"message": "missing.requirements", "type": "danger", "delay": 20000}});
+                    callback({
+                        "note": {
+                            "message": ["missing.requirements", {"app": check}],
+                            "type": "danger",
+                            "delay": 20000
+                        }
+                    });
                 }
                 return;
                 break;
             case "getVersions":
-                games.factorio.getStableVersion(function (stableVersion) {
-                    games.factorio.getInstalledVersion(frontendMessage.id, function (installedVersion) {
+                var server = servers[frontendMessage.id];
+                games[server.game].getLatestVersion(server.branch, function (stableVersion) {
+                    games[server.game].getInstalledVersion(frontendMessage.id, function (installedVersion) {
                         callback({
                             "available": stableVersion,
                             "installed": installedVersion
@@ -44,7 +53,11 @@ module.exports = function (user, frontendMessage, callback) {
                 break;
             case "load":
                 var server = servers[frontendMessage.id];
-                callback(server);
+                var path = gameserver.getFolder(frontendMessage.id) + "/console.log";
+                callback({
+                    "serverData": server,
+                    "consoleLog": fs.existsSync(path) ? fs.readFileSync(path).toString() : ""
+                });
                 return;
                 break;
         }

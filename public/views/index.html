@@ -7,7 +7,15 @@
 <div class="index-server hidden">
     <h4 class="collapsable-trigger"  data-collapsable-target="index.console">Console</h4>
     <div class="collapsable-target" data-collapsable-id="index.console">
-        <span class="btn btn-info save" data-translate="settings.save"></span>
+        <div class="console-log"></div>
+        <div class="form-group has-feedback input-group form-inline">
+            <span class="input-group-addon"><i class="glyphicon glyphicon-chevron-right"></i></span>
+            <input type="search" class="form-control" data-translate-property="placeholder,index.input.console">
+            <select class="selectpicker autoscroll">
+                <option value="yes" data-translate="index.console.autoscroll.enabled"></option>
+                <option value="no" data-translate="index.console.autoscroll.disabled"></option>
+            </select>
+        </div>
     </div>
     <h4 class="collapsable-trigger"  data-collapsable-target="index.startstop">Start / Stop server</h4>
     <div class="collapsable-target" data-collapsable-id="index.startstop">

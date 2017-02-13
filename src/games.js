@@ -7,7 +7,7 @@ var fs = require("fs");
 var fstools = require(__dirname + "/fstools");
 var gameserver = require(__dirname + "/gameserver");
 var cache = require(__dirname + "/cache");
-var settings = db.get("settings").value();
+var compareVersions = require('compare-versions');
 
 /**
  * Games
@@ -27,6 +27,7 @@ games.factorio = {};
  * @return {string|boolean}
  */
 games.factorio.checkRequirements = function () {
+    var settings = db.get("settings").value();
     if (!settings.tar) {
         return "tar"
     }
@@ -61,40 +62,53 @@ games.factorio.stopServer = function (id, callback) {
  */
 games.factorio.updateServer = function (id, callback) {
     var settings = db.get("settings").value();
+    var serverData = db.get("servers").value()[id];
     gameserver.writeToConsole(id, "Server update started", "info");
     games.factorio.getInstalledVersion(id, function (installedVersion) {
-        var downloadPackage = function (url, extension) {
-            var lastLength = 0;
-            games.factorio.stopServer(id, function () {
-                var tmpFolder = gameserver.getFolder(id) + "/tmp";
-                var packageFile = tmpFolder + "/package." + extension;
-                var length = 0;
-                fstools.deleteRecursive(tmpFolder);
-                fs.mkdirSync(tmpFolder, 0o777);
-                request(url, function () {
-                    gameserver.writeToConsole(id, "Package downloaded successfully", "info");
-                    gameserver.writeToConsole(id, "Unpacking package");
-                }).on("data", function (chunk) {
-                    length += chunk.length;
-                    if (lastLength + 512 < length / 1024) {
-                        lastLength = length / 1024;
-                        gameserver.writeToConsole(id, "Download server update " + url + "... " + (lastLength).toFixed(0) + "kB received...");
-                    }
-                }).pipe(fs.createWriteStream(packageFile));
-            });
-        };
-        if (installedVersion === null) {
-            games.factorio.getStableVersion(function (version) {
-                games.factorio.getDownloadLink(null, version, function (url) {
-                    downloadPackage(url, "tar.gz");
+        if (installedVersion === false) {
+            return;
+        }
+        games.factorio.getLatestVersion(serverData.factorio.branch, function (version) {
+            games.factorio.getDownloadLink(version, function (url) {
+                var lastLength = 0;
+                games.factorio.stopServer(id, function () {
+                    var tmpFolder = gameserver.getFolder(id) + "/tmp";
+                    var packageFile = tmpFolder + "/package.tar.gz";
+                    var length = 0;
+                    fstools.deleteRecursive(tmpFolder);
+                    fs.mkdirSync(tmpFolder, 0o777);
+                    gameserver.writeToConsole(id, "Download for server update " + url + " started");
+                    request(url, function () {
+                        gameserver.writeToConsole(id, "Package downloaded successfully", "info");
+                        gameserver.writeToConsole(id, "Unpacking package");
+                        exec("cd " + tmpFolder + " && " + settings.tar + " xfv " + packageFile, null, function (error, stdout) {
+                            if (error) {
+                                gameserver.writeToConsole(id, "Error while unpacking package: " + error, "error");
+                                return;
+                            }
+                            var serverFolder = gameserver.getFolder(id) + "/factorio";
+                            if (!fs.existsSync(serverFolder)) fs.mkdirSync(serverFolder, 0o777);
+                            exec("cd " + tmpFolder + "/factorio && cp -Rf * " + serverFolder, null, function (error, stdout) {
+                                if (error) {
+                                    gameserver.writeToConsole(id, "Error while copying new server files: " + error, "error");
+                                    return;
+                                }
+                                fstools.deleteRecursive(tmpFolder);
+                                gameserver.writeToConsole(id, "Server update done. You can now start the server", "success");
+                                if (callback) callback(true);
+                            });
+                        });
+                    }).on("data", function (chunk) {
+                        length += chunk.length;
+                        var lengthMB = length / 1024 / 1024;
+                        if (lastLength + 5 < lengthMB) {
+                            lastLength = lengthMB;
+                            gameserver.writeToConsole(id, (lastLength).toFixed(2) + "MB received...");
+                        }
+                    }).pipe(fs.createWriteStream(packageFile));
                 });
             });
-        } else
-            games.factorio.getNextVersion(installedVersion, function (version, isStable) {
-                games.factorio.getDownloadLink(installedVersion, version, function (url) {
-                    downloadPackage(url, "zip");
-                });
-            });
+        });
     });
 };
 
@@ -121,38 +135,23 @@ games.factorio.getAvailableVersions = function (callback) {
 
 /**
  * Get stable version of the factorio server
+ * @param {string} branch
  * @param {function} callback
  */
-games.factorio.getStableVersion = function (callback) {
+games.factorio.getLatestVersion = function (branch, callback) {
     games.factorio.getAvailableVersions(function (versions) {
+        var maxVersion = '0.0.0';
         for (var i = 0; i < versions.length; i++) {
             var obj = versions[i];
-            if (obj.stable) {
-                callback(obj.stable);
+            if (branch == "stable" && obj.stable) {
+                maxVersion = obj.stable;
+                break;
+            }
+            if (obj.to && compareVersions(obj.to, maxVersion) === 1) {
+                maxVersion = obj.to;
             }
         }
-    });
-};
-
-/**
- * Get next version of the factorio server and a flag if this is the current stable version
- * @param {string} version
- * @param {function} callback
- */
-games.factorio.getNextVersion = function (version, callback) {
-    games.factorio.getAvailableVersions(function (versions) {
-        var next = "";
-        var stable = "";
-        for (var i = 0; i < versions.length; i++) {
-            var obj = versions[i];
-            if (obj.from && obj.from == version) {
-                next = obj.to;
-            }
-            if (obj.stable) {
-                stable = obj.stable;
-            }
-        }
-        callback(next, next == stable);
+        callback(maxVersion);
     });
 };
 
@@ -162,10 +161,15 @@ games.factorio.getNextVersion = function (version, callback) {
  * @param {function} callback
  */
 games.factorio.getInstalledVersion = function (id, callback) {
-    var bin = gameserver.getFolder(id) + "/server/bin/x64/factorio";
+    var bin = gameserver.getFolder(id) + "/factorio/bin/x64/factorio";
     if (fs.existsSync(bin)) {
         exec(bin + " --version", null, function (error, stdout) {
-            console.log(stdout);
+            if (error) {
+                gameserver.writeToConsole(id, "Error getting current factorio server version: " + error, "error");
+                callback(false);
+                return;
+            }
+            callback(stdout.match(/Version:([ 0-9\.\-a-z_]+)/i)[1].trim());
         });
         return;
     }
@@ -174,32 +178,20 @@ games.factorio.getInstalledVersion = function (id, callback) {
 
 /**
  * Get download link
- * @param {string|null} fromVersion
- * @param {string} toVersion
+ * @param {string} version
  * @param {function} callback
  */
-games.factorio.getDownloadLink = function (fromVersion, toVersion, callback) {
-    if (fromVersion === null) {
-        request({
-            url: "https://www.factorio.com/get-download/" + toVersion + "/headless/linux64",
-            "followRedirect": false
-        }, function (error, response, body) {
-            if (error) {
-                callback(null);
-                return;
-            }
-            callback(body.match(/href="(.*?)"/i)[1].replace(/\&amp;/g, "&"));
-        });
-    } else {
-        request("https://updater.factorio.com/get-download-link?from=" + fromVersion + "&to=" + toVersion + "&apiVersion=2&package=core-linux_headless64", function (error, response, body) {
-            if (error) {
-                callback(null);
-                return;
-            }
-            var data = JSON.parse(body);
-            callback(data[0]);
-        });
-    }
+games.factorio.getDownloadLink = function (version, callback) {
+    request({
+        "url": "https://www.factorio.com/get-download/" + version + "/headless/linux64",
+        "followRedirect": false
+    }, function (error, response, body) {
+        if (error) {
+            callback(null);
+            return;
+        }
+        callback(body.match(/href="(.*?)"/i)[1].replace(/\&amp;/g, "&"));
+    });
 };
 
 module.exports = games;

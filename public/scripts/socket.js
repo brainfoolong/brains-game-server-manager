@@ -121,7 +121,7 @@ Socket.connect = function (callback) {
                     for (var i in Socket.onMessageEvents) {
                         if (Socket.onMessageEvents.hasOwnProperty(i)) {
                             var cb = Socket.onMessageEvents[i];
-                            if (cb) cb(data.message);
+                            if (cb) cb(data.action, data.message);
                         }
                     }
                     // show server disconnect message
@@ -174,6 +174,9 @@ Socket.connectAndLoadView = function () {
 Socket.send = function (action, message, callback) {
     var receiveCallback = function (receivedMessage) {
         if (receivedMessage && receivedMessage.note) {
+            if(typeof receivedMessage.note.message == "object"){
+                receivedMessage.note.message = t(receivedMessage.note.message[0], receivedMessage.note.message[1]);
+            }
             note(receivedMessage.note.message, receivedMessage.note.type, receivedMessage.note.delay);
         }
         if (receivedMessage && receivedMessage.error) {

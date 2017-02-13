@@ -18,6 +18,7 @@ if (mode == "start") {
     require(__dirname + "/websocketmgr");
     require(__dirname + "/config");
     require(__dirname + "/core");
+    require(__dirname + "/gameserver");
     return;
 }
 
