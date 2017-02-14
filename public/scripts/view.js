@@ -36,11 +36,12 @@ View.load = function (view) {
             return;
         }
         $.get("views/" + view + ".html", function (htmlData) {
-            $content.html(htmlData);
+            $content.html($('<div class="view-content"></div>').html(htmlData));
             $.getScript("views/" + view + ".js", function () {
                 if (View.script) View.script(message);
                 View.script = null;
                 lang.replaceInHtml($content);
+                collapsable($("#content"));
             });
         });
     })

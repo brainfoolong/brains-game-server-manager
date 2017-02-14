@@ -15,7 +15,7 @@ var Form = {};
  */
 Form.create = function (container, formName, fields, onSubmit, values) {
     if (!values) values = {};
-    var $form = $('<form>').attr("name", formName).attr("onsubmit", "return false");
+    var $form = $('<form>').attr("name", formName).attr("onsubmit", "return false").attr("id", "form-" + formName);
     for (var fieldName in fields) {
         var field = fields[fieldName];
         var fieldNameMatch = fieldName.match(/^(.*?)\[(.*?)\]/);
@@ -29,17 +29,21 @@ Form.create = function (container, formName, fields, onSubmit, values) {
         if (typeof currentValue == "undefined") currentValue = null;
         var $input = null;
         var langKey = formName + '.' + fieldName;
-        var $el = $('<div class="form-field">' +
+        if (field.langKey) langKey = field.langKey;
+        var $el = $('<div class="form-field type-' + field.type + '">' +
             '<div class="form-label"></div>' +
             '<div class="form-input"></div>' +
             '</div>');
         if (t(langKey + ".title") != langKey + ".title") {
-            $el.find(".form-label").append($("<strong>").text(t(langKey + ".title", field.lang_parameters)));
+            $el.find(".form-label").append($("<strong>").text(t(langKey + ".title", field.langParams)));
         }
         if (t(langKey + ".sub") != langKey + ".sub") {
-            $el.find(".form-label").append($("<small>").text(t(langKey + ".sub", field.lang_parameters)));
+            $el.find(".form-label").append($("<small>").text(t(langKey + ".sub", field.langParams)));
         }
         switch (field.type) {
+            case "none":
+
+                break;
             case "textarea":
                 $input = $('<textarea class="form-control autoheight" name="' + fieldName + '">');
                 if (currentValue !== null) {
@@ -71,7 +75,9 @@ Form.create = function (container, formName, fields, onSubmit, values) {
                 if (field.multiple) $input.attr("multiple", true);
                 for (var i = 0; i < field.values.length; i++) {
                     var valueKey = field.values[i];
-                    $input.append($('<option>').attr("value", valueKey).text(t(formName + '.' + fieldName + '.value.' + valueKey)));
+                    var langKeyValue = langKey + ".value." + valueKey;
+                    if (field.langKeyValues) langKeyValue = field.langKeyValues + "." + valueKey;
+                    $input.append($('<option>').attr("value", valueKey).text(t(langKeyValue, field.langParams)));
                 }
                 if (currentValue !== null) {
                     $input.val(currentValue);
@@ -79,29 +85,44 @@ Form.create = function (container, formName, fields, onSubmit, values) {
                 break;
             case "switch":
                 $input = $('<select class="selectpicker" name="' + fieldName + ':boolean">');
-                var fieldValues = ["yes", "no"];
+                var fieldValues = ["true", "false"];
                 for (var i = 0; i < fieldValues.length; i++) {
                     var valueKey = fieldValues[i];
-                    $input.append($('<option>').attr("value", valueKey).text(t(valueKey)));
+                    $input.append($('<option>').attr("value", valueKey).text(t(valueKey == "true" ? "yes" : "no")));
                 }
                 if (currentValue !== null) {
                     $input.val(currentValue ? "true" : "false");
                 }
                 break;
         }
-        if (field.required) {
-            $input.attr("required", true);
+        if ($input) {
+            if (field.pattern) {
+                $input.attr("pattern", field.pattern);
+            }
+            if (field.required) {
+                $input.attr("required", true);
+            }
+            if (field.placeholder) {
+                $input.attr("placeholder", t(field.placeholder, field.langParams));
+            }
+            if (field.attributes) {
+                for (var i in field.attributes) {
+                    $input.attr("data-" + i, field.attributes[i]);
+                }
+            }
+            $el.find(".form-input").append($input);
         }
-        if (field.placeholder) {
-            $input.attr("placeholder", t(field.placeholder, field.lang_parameters));
-        }
-        if (field.attributes) {
-            for (var i in field.attributes) {
-                $input.attr("data-" + i, field.attributes[i]);
+        $form.append($el);
+        // if grouped
+        if (field.attachTo) {
+            var attachTo = $form.find("[name='" + field.attachTo + "']").closest(".form-field");
+            if (attachTo.length) {
+                if ($input) {
+                    attachTo.find(".form-input").append($input).addClass("form-group input-group form-inline");
+                    $el.remove();
+                }
             }
         }
-        $el.find(".form-input").append($input);
-        $form.append($el);
     }
     $form.append('<span data-name="save" data-translate="save" class="btn btn-default btn-info submit-form "></span>');
     lang.replaceInHtml($form);

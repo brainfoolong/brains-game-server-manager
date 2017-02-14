@@ -533,3 +533,51 @@ body.is-not-admin [data-role='admin'] {
 .console-log .line.type-error {
     color: red;
 }
+
+.require-installed {
+    display: none;
+}
+
+.installed .require-installed {
+    display: block;
+}
+
+.form-field.type-none::before {
+    transform: rotate(-90deg);
+    content: "\e114";
+    position: absolute;
+    display: inline-block;
+    font-family: 'Glyphicons Halflings';
+    font-style: normal;
+    font-weight: normal;
+    font-size: 80%;
+    padding-right: 10px;
+    line-height: 1;
+    margin-top: -1px;
+    margin-left: -5px;
+    -webkit-font-smoothing: antialiased;
+    transition: 0.2s;
+}
+
+.form-field.type-none {
+    font-size: 120%;
+}
+
+.form-field.type-none .form-label {
+    border: 0;
+}
+
+.index-server p {
+    padding: 20px;
+    padding-left: 25px;
+    color: #9cd3ff;
+}
+
+input:invalid, select:invalid, textarea:invalid {
+    border:2px solid red !important;
+    background-color: #ffd7e0;
+}
+
+form{
+    position: relative;
+}

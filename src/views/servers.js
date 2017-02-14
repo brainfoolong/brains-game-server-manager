@@ -3,6 +3,7 @@
 var db = require(__dirname + "/../db");
 var hash = require(__dirname + "/../hash");
 var gameserver = require(__dirname + "/../gameserver");
+var games = require(__dirname + "/../games");
 var fs = require("fs");
 
 /**
@@ -20,25 +21,11 @@ module.exports = function (user, frontendMessage, callback) {
     if (frontendMessage && frontendMessage.action == "save") {
         var formData = frontendMessage.formData;
         var id = frontendMessage.id || hash.random(32);
+        formData.id = id;
         db.get("servers").set(id, formData).value();
         var serverFolder = gameserver.getFolder(id);
         if (!fs.existsSync(serverFolder)) fs.mkdirSync(serverFolder, 0o777);
-
-        if (formData.game == "factorio") {
-            // create server settings file
-            var settingsData = formData.factorio;
-            if (!settingsData.rcon_port) {
-                delete settingsData.rcon_port
-                delete settingsData.rcon_password;
-            }
-            settingsData.tags = settingsData.tags.split(" ");
-            settingsData.admins = settingsData.admins.replace(/,[\s]+]/g, "").split(",");
-            settingsData.visibility = {
-                "public": settingsData.visibility && settingsData.visibility.indexOf("public") > -1,
-                "lan": settingsData.visibility && settingsData.visibility.indexOf("lan") > -1,
-            };
-            fs.writeFile(serverFolder + "/server-settings.json", JSON.stringify(settingsData))
-        }
+        games.factorio.createConfig(id);
         callback(true);
         return;
     }

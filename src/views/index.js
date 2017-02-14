@@ -24,10 +24,9 @@ module.exports = function (user, frontendMessage, callback) {
                 var server = servers[frontendMessage.id];
                 var check = games[server.game].checkRequirements()
                 if (check === true) {
-                    games[server.game].updateServer(frontendMessage.id, function () {
-
+                    games[server.game].updateServer(frontendMessage.id, function (success) {
+                        callback(success);
                     });
-                    callback({"note": {"message": "index.update-server.scheduled", "type": "info", "delay": 20000}});
                 } else {
                     callback({
                         "note": {
@@ -37,11 +36,26 @@ module.exports = function (user, frontendMessage, callback) {
                         }
                     });
                 }
-                return;
+                break;
+            case "stopServer":
+                var server = servers[frontendMessage.id];
+                games[server.game].stopServer(frontendMessage.id);
+                callback({"note": {"message": "index.stop-server.scheduled", "type": "info", "delay": 20000}});
+                break;
+            case "startServer":
+                var server = servers[frontendMessage.id];
+                games[server.game].startServer(frontendMessage.id);
+                callback({"note": {"message": "index.start-server.scheduled", "type": "info", "delay": 20000}});
+                break;
+            case "getServerStatus":
+                var server = servers[frontendMessage.id];
+                games[server.game].getStatus(frontendMessage.id, function (status) {
+                    callback(status);
+                });
                 break;
             case "getVersions":
                 var server = servers[frontendMessage.id];
-                games[server.game].getLatestVersion(server.branch, function (stableVersion) {
+                games[server.game].getLatestVersion(frontendMessage.id, server.branch, function (stableVersion) {
                     games[server.game].getInstalledVersion(frontendMessage.id, function (installedVersion) {
                         callback({
                             "available": stableVersion,
@@ -49,7 +63,6 @@ module.exports = function (user, frontendMessage, callback) {
                         });
                     });
                 });
-                return;
                 break;
             case "load":
                 var server = servers[frontendMessage.id];
@@ -58,9 +71,12 @@ module.exports = function (user, frontendMessage, callback) {
                     "serverData": server,
                     "consoleLog": fs.existsSync(path) ? fs.readFileSync(path).toString() : ""
                 });
-                return;
                 break;
+            default:
+                var server = servers[frontendMessage.id];
+                games[server.game].onCustomFrontendMessage(frontendMessage.id, frontendMessage, callback);
         }
+        return;
     }
     callback({"serverlist": serverlist});
 };

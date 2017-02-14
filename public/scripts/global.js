@@ -76,6 +76,21 @@ function get(key) {
     return m[1];
 }
 
+/**
+ * Scroll container to given position
+ * @param {*} container
+ * @param {number} pos
+ */
+function scrollTo(container, pos) {
+    container = $(container);
+    $({"pos": container.scrollTop()}).animate({"pos": pos}, {
+        duration: 300,
+        step: function () {
+            container.scrollTop(this.pos);
+        }
+    });
+};
+
 $(function () {
     if (typeof WebSocket == "undefined") {
         note("Your browser is not supported in this application (Outdated Browser). Please upgrade to the newest version");
