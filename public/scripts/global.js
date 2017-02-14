@@ -83,6 +83,7 @@ function get(key) {
  */
 function scrollTo(container, pos) {
     container = $(container);
+    console.log(container, pos);
     $({"pos": container.scrollTop()}).animate({"pos": pos}, {
         duration: 300,
         step: function () {

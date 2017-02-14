@@ -70,6 +70,8 @@ View.script = function () {
         });
     });
     if (get("map")) {
-        scrollTo("html, body", $("#form-factoriomaps").offset().top);
+        setTimeout(function () {
+            scrollTo("body", $("#form-factoriomaps").offset().top);
+        }, 50);
     }
 };

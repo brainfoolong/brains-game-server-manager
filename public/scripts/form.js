@@ -130,10 +130,19 @@ Form.create = function (container, formName, fields, onSubmit, values) {
     container.append($form);
     $form.on("click", ".submit-form", function () {
         var f = $(this).closest("form");
+        $form.find(".invalid").removeClass("invalid");
         if (f[0].checkValidity()) {
             var formDataJson = f.serializeJSON();
             onSubmit(formDataJson);
         } else {
+            var firstInvalid = $form.find(":invalid").first();
+            if (firstInvalid.hasClass("selectpicker")) {
+                firstInvalid.prevAll("button").addClass("invalid");
+                firstInvalid.one("change", function () {
+                    $(this).prevAll("button").removeClass("invalid");
+                });
+            }
+            scrollTo("body", firstInvalid.closest(".form-field").offset().top);
             // on validation error trigger a fake submit button to enable validation UI popup
             $(this).after('<input type="submit">');
             $(this).next().trigger("click").remove();

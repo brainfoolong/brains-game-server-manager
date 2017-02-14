@@ -54,7 +54,7 @@ factorio.onCustomFrontendMessage = function (serverId, message, callback) {
                 noteType = "danger";
             } else {
                 server.factorioMaps[id] = message.formData;
-                if (message.active) {
+                if (message.formData.active) {
                     server.factorio.map = id;
                 }
                 db.get("servers").set(serverId, server).value();
@@ -190,8 +190,11 @@ factorio.startServer = function (id, callback) {
         gameserver.writeToConsole(id, "No active map set. Create one.", "error");
         return;
     }
-    gameserver.writeToConsole(id, "Server started", "success");
-    if (callback) callback(true);
+    var bin = gameserver.getFolder(id) + "/server.sh";
+    exec(bin + " start", function (error, stdout) {
+        gameserver.writeToConsole(id, "Server started with message: " + stdout, "success");
+        if (callback) callback(true);
+    });
 };
 
 /**
@@ -200,9 +203,12 @@ factorio.startServer = function (id, callback) {
  * @param {function=} callback
  */
 factorio.stopServer = function (id, callback) {
+    var bin = gameserver.getFolder(id) + "/server.sh";
     gameserver.writeToConsole(id, "Server stopping...", "info");
-    gameserver.writeToConsole(id, "Server stopped", "success");
-    if (callback) callback(true);
+    exec(bin + " stop", function (error, stdout) {
+        gameserver.writeToConsole(id, "Server stopped with message: " + stdout, "success");
+        if (callback) callback(true);
+    });
 };
 
 /**
@@ -219,8 +225,6 @@ factorio.updateServer = function (id, callback) {
             var lastLength = 0;
             factorio.stopServer(id, function () {
                 var serverFolder = gameserver.getFolder(id) + "/server";
-                var mapsFolder = serverFolder + "/maps";
-                if (!fs.existsSync(mapsFolder)) fs.mkdirSync(mapsFolder, 0o777);
                 var tmpFolder = gameserver.getFolder(id) + "/tmp";
                 var packageFile = tmpFolder + "/package.tar.gz";
                 var length = 0;
@@ -228,7 +232,7 @@ factorio.updateServer = function (id, callback) {
                 fs.mkdirSync(tmpFolder, 0o777);
                 gameserver.writeToConsole(id, "Download for server update " + url + " started");
                 request(url, function () {
-                    gameserver.writeToConsole(id, "Package downloaded successfully", "info");
+                    gameserver.writeToConsole(id, "Package downloaded successfully");
                     gameserver.writeToConsole(id, "Unpacking server to temp directory");
                     exec("cd " + tmpFolder + " && " + settings.tar + " xfv " + packageFile, null, function (error) {
                         if (error) {
@@ -245,6 +249,8 @@ factorio.updateServer = function (id, callback) {
                                 return;
                             }
                             fstools.deleteRecursive(tmpFolder);
+                            var mapsFolder = serverFolder + "/maps";
+                            if (!fs.existsSync(mapsFolder)) fs.mkdirSync(mapsFolder, 0o777);
                             gameserver.writeToConsole(id, "Server update done. You can now start the server", "success");
                             if (callback) callback(true);
                         });

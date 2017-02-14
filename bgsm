@@ -2,7 +2,7 @@
 
 LABEL="Brains Game Server Manager"
 PIDFILE=bgsm.pid
-SCRIPT=bgsm.
+SCRIPT=bgsm
 BASEDIR=$(dirname "$0")
 cd "${BASEDIR}"
 

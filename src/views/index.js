@@ -65,6 +65,10 @@ module.exports = function (user, frontendMessage, callback) {
                 });
                 break;
             case "load":
+                if(typeof servers[frontendMessage.id] == "undefined"){
+                    callback();
+                    return;
+                }
                 var server = servers[frontendMessage.id];
                 var path = gameserver.getFolder(frontendMessage.id) + "/console.log";
                 callback({
@@ -73,6 +77,10 @@ module.exports = function (user, frontendMessage, callback) {
                 });
                 break;
             default:
+                if(typeof servers[frontendMessage.id] == "undefined"){
+                    callback();
+                    return;
+                }
                 var server = servers[frontendMessage.id];
                 games[server.game].onCustomFrontendMessage(frontendMessage.id, frontendMessage, callback);
         }

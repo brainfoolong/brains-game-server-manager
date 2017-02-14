@@ -2,9 +2,9 @@
 # template shell script to start/stop a server
 
 LABEL=Factorio
-PIDFILE=server.pid
-FIFOFILE=server.fifo
 BASEDIR=$(dirname "$0")
+PIDFILE="$BASEDIR/server.pid"
+FIFOFILE="$BASEDIR/server.fifo"
 cd "${BASEDIR}"
 
 case "$1" in
@@ -30,7 +30,8 @@ case "$1" in
 			echo "!"
 		fi
 		echo "Starting $LABEL... "
-		$BASEDIR/bin/x64/factorio --port {_port_} --start-server {_map_} --server-settings $BASEDIR/server-settings.json 1> $BASEDIR/output.log 2> $BASEDIR/error.log < $BASEDIR/$FIFOFILE &
+		mkfifo $FIFOFILE
+		$BASEDIR/bin/x64/factorio --port {_port_} --start-server $BASEDIR/maps/{_map_}.zip --server-settings $BASEDIR/server-settings.json 1> $BASEDIR/output.log 2> $BASEDIR/error.log < $FIFOFILE &
 		PID=$!
 		ps -p ${PID} > /dev/null 2>&1
 		if [ "$?" -ne "0" ]; then

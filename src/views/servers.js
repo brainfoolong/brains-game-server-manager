@@ -25,7 +25,7 @@ module.exports = function (user, frontendMessage, callback) {
         db.get("servers").set(id, formData).value();
         var serverFolder = gameserver.getFolder(id);
         if (!fs.existsSync(serverFolder)) fs.mkdirSync(serverFolder, 0o777);
-        games.factorio.createConfig(id);
+        games[formData.game].createConfig(id);
         callback(true);
         return;
     }

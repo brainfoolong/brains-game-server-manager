@@ -573,7 +573,7 @@ body.is-not-admin [data-role='admin'] {
     color: #9cd3ff;
 }
 
-input:invalid, select:invalid, textarea:invalid {
+input:invalid, select:invalid, textarea:invalid, button.invalid {
     border:2px solid red !important;
     background-color: #ffd7e0;
 }
