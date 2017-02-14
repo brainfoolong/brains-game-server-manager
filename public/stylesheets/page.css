@@ -508,8 +508,8 @@ body.is-not-admin [data-role='admin'] {
     margin-bottom: 40px;
 }
 
-.console-log {
-    max-height: 200px;
+.log-window {
+    height: 200px;
     overflow: auto;
     line-height: 1.3;
     background: white;
@@ -520,17 +520,17 @@ body.is-not-admin [data-role='admin'] {
     font-size: 90%;
 }
 
-.console-log time {
+.log-window time {
     color: #666666;
     font-size: 80%;
     padding-right: 10px;
 }
 
-.console-log .message {
+.log-window .message {
     display: inline-block;
 }
 
-.console-log .line.type-error {
+.log-window .line.type-error {
     color: red;
 }
 
@@ -574,10 +574,26 @@ body.is-not-admin [data-role='admin'] {
 }
 
 input:invalid, select:invalid, textarea:invalid, button.invalid {
-    border:2px solid red !important;
+    border: 2px solid red !important;
     background-color: #ffd7e0;
 }
 
-form{
+form {
     position: relative;
+}
+
+.start-server, .stop-server {
+    display: none;
+}
+
+.view-content.status-running .stop-server {
+    display: block;
+}
+
+.view-content.status-stopped .start-server {
+    display: block;
+}
+
+.view-content.game-factorio .execute-command {
+    display: none;
 }

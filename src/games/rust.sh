@@ -1,9 +1,10 @@
 #!/bin/sh
 # template shell script to start/stop a server
 
-LABEL=Factorio
+LABEL=Rust
 BASEDIR=$(dirname "$0")
 PIDFILE="$BASEDIR/server.pid"
+FIFOFILE="$BASEDIR/server.fifo"
 cd "${BASEDIR}"
 
 case "$1" in
@@ -15,6 +16,7 @@ case "$1" in
 			else
 				echo "$PIDFILE found, but no server running. Possibly your previously started server crashed"
 				rm $PIDFILE
+				rm $FIFOFILE
 			fi
 		fi
 		if [ "${UID}" = "0" ]; then
@@ -27,11 +29,15 @@ case "$1" in
 			done
 			echo "!"
 		fi
+		if [ -e $FIFOFILE ]; then
+		    rm $FIFOFILE
+		fi
 		if [ -e $PIDFILE ]; then
 		    rm $PIDFILE
 		fi
 		echo "Starting $LABEL... "
-		$BASEDIR/server/bin/x64/factorio --port {_port_} --start-server $BASEDIR/maps/{_map_}.zip --server-settings $BASEDIR/server-settings.json > $BASEDIR/output.log 2> $BASEDIR/error.log &
+		mkfifo $FIFOFILE
+		$BASEDIR/server/bin/x64/factorio --port {_port_} --start-server $BASEDIR/maps/{_map_}.zip --server-settings $BASEDIR/server-settings.json > $BASEDIR/output.log 2> $BASEDIR/error.log < $FIFOFILE &
 		PID=$!
 		ps -p ${PID} > /dev/null 2>&1
 		if [ "$?" -ne "0" ]; then
@@ -63,6 +69,7 @@ case "$1" in
 				echo "Done"
 			fi
 			rm $PIDFILE
+			rm $FIFOFILE
 		else
 			echo "Server stopped"
 			exit 0

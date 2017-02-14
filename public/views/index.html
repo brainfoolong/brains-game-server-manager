@@ -5,21 +5,27 @@
 </div>
 
 <div class="index-server hidden">
-    <h4 class="collapsable-trigger" data-collapsable-target="index.console">Console</h4>
-    <div class="collapsable-target" data-collapsable-id="index.console">
-        <div class="console-log"></div>
-        <div class="form-group input-group form-inline">
+    <h4 class="collapsable-trigger" data-collapsable-target="index.logs" data-translate="index.logs"></h4>
+    <div class="collapsable-target" data-collapsable-id="index.logs">
+        <ul class="nav nav-tabs log-tabs">
+            <li data-id="console"><a href="#" data-translate="index.logs.console"></a></li>
+            <li data-id="output"><a href="#" data-translate="index.logs.output"></a></li>
+            <li data-id="error"><a href="#" data-translate="index.logs.error"></a></li>
+        </ul>
+        <div class="log-window"></div>
+        <div class="form-group input-group form-inline execute-command">
             <span class="input-group-addon"><i class="glyphicon glyphicon-chevron-right"></i></span>
             <input type="search" class="form-control" data-translate-property="placeholder,index.input.console">
             <select class="selectpicker autoscroll">
-                <option value="true" data-translate="index.console.autoscroll.enabled"></option>
-                <option value="false" data-translate="index.console.autoscroll.disabled"></option>
+                <option value="true" data-translate="index.logs.autoscroll.enabled"></option>
+                <option value="false" data-translate="index.logs.autoscroll.disabled"></option>
             </select>
         </div>
     </div>
     <div class="require-installed">
         <h4 class="collapsable-trigger" data-collapsable-target="index.startstop">Start / Stop server</h4>
         <div class="collapsable-target" data-collapsable-id="index.startstop">
+            <pre><span data-translate="index.serverstatus"></span>: <span class="server-status"></span></pre>
             <span class="btn start-server btn-success" data-translate="index.start-server"></span>
             <span class="btn stop-server btn-danger" data-translate="index.stop-server"></span>
         </div>

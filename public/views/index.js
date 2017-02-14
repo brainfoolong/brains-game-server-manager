@@ -1,7 +1,7 @@
 "use strict";
 View.script = function (message) {
 
-    var consoleLog = $(".console-log");
+    var $logWindow = $(".log-window");
     var autoscroll = $(".autoscroll");
 
     for (var i in message.serverlist) {
@@ -49,18 +49,54 @@ View.script = function (message) {
         });
     });
 
+    $(".log-tabs").on("click", "a", function (ev) {
+        ev.preventDefault();
+        $(".log-tabs li").removeClass("active");
+        var $li = $(this).closest("li");
+        $li.addClass("active");
+        Storage.set("index.logs.last", $li.attr("data-id"));
+        $logWindow.html(t("loading"));
 
-    var addConsoleLogMessage = function (messageData) {
-        consoleLog.append($('<div>').addClass("line type-" + messageData.type).html('<time>' + new Date(messageData.time).toLocaleString() + '</time><div class="message text-' + messageData.type + '">' + messageData.message + '</div>'));
+        View.send({"action": "loadLog", "id": get("id"), "file": $li.attr("data-id")}, function (fileData) {
+            $logWindow.html('');
+            if (fileData) {
+                var lines = fileData.split("\n");
+                if (lines.length) {
+                    for (var i = 0; i < lines.length; i++) {
+                        var line = lines[i];
+                        if (!line) continue;
+                        if (line.substr(0, 1) == "{" && line.substr(-1) == "}") {
+                            addLogMessage(JSON.parse(line));
+                        } else {
+                            addLogMessage({"time": null, "message": line, "type": "debug"});
+                        }
+                    }
+                }
+            }
+        });
+    });
+
+    $(".log-tabs li").filter("[data-id='" + (Storage.get("index.logs.last") || "console") + "']").find("a").trigger("click");
+
+    var addLogMessage = function (messageData) {
+        if (messageData.type == "success" || messageData.type == "error") {
+            updateServerInfo();
+        }
+        console.log(messageData);
+        var $message = $('<div>').addClass("line type-" + messageData.type).html('<time>' + new Date(messageData.time).toLocaleString() + '</time><div class="message text-' + messageData.type + '">' + messageData.message + '</div>');
+        if (!messageData.time) $message.find("time").remove();
+        $logWindow.append($message);
         if (autoscroll.val() == "true") {
-            scrollTo(consoleLog, 999999999);
+            scrollTo($logWindow, 999999999);
         }
     };
 
     var updateServerInfo = function () {
-        View.send({"action": "serverStatus", "id": get("id")}, function (status) {
-            // @todo status
-            console.log(status);
+        View.send({"action": "getServerStatus", "id": get("id")}, function (status) {
+            if (status) {
+                $(".view-content").removeClass("status-stopped status-running").addClass("status-" + status.status);
+                $(".server-status").text(t("index.serverstatus." + status.status));
+            }
         });
     };
 
@@ -69,12 +105,23 @@ View.script = function (message) {
         Interval.create("index.serverinfo", updateServerInfo, 10000);
         updateServerInfo();
         Socket.onMessage("console-tail", function (action, message) {
-            if (action == "console-tail" && message.server == get("id")) {
-                addConsoleLogMessage(message.data);
+            if (action == "console-tail" && message.server == get("id") && $(".log-tabs .active").attr("data-id") == "console") {
+                addLogMessage(message.data);
+            }
+        });
+        Socket.onMessage("output-tail", function (action, message) {
+            if (action == "output-tail" && message.server == get("id") && $(".log-tabs .active").attr("data-id") == "output") {
+                addLogMessage(message.data);
+            }
+        });
+        Socket.onMessage("error-tail", function (action, message) {
+            if (action == "error-tail" && message.server == get("id") && $(".log-tabs .active").attr("data-id") == "error") {
+                addLogMessage(message.data);
             }
         });
         View.send({"action": "load", "id": get("id")}, function (loadMessage) {
             if (loadMessage && loadMessage.serverData) {
+                $(".view-content").addClass("game-" + loadMessage.serverData.game).attr("data-game", loadMessage.serverData.game);
                 $.get("views/games/" + loadMessage.serverData.game + ".html", function (html) {
                     $(".game-content").html(html);
                     $.getScript("views/games/" + loadMessage.serverData.game + ".js", function () {
@@ -84,16 +131,6 @@ View.script = function (message) {
                         collapsable($(".game-content"));
                     });
                 });
-
-                var lines = loadMessage.consoleLog.split("\n");
-                if (lines.length) {
-                    for (var i = 0; i < lines.length; i++) {
-                        var line = lines[i];
-                        if (!line) continue;
-                        addConsoleLogMessage(JSON.parse(line));
-                    }
-                }
-
                 $(".index-server").removeClass("hidden");
                 View.send({"action": "getVersions", "id": get("id")}, function (versions) {
                     $(".view-content").addClass(versions.installed ? "installed" : "not-installed");

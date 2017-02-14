@@ -4,6 +4,8 @@ var fs = require("fs");
 var db = require(__dirname + "/../db");
 var games = require(__dirname + "/../games");
 var gameserver = require(__dirname + "/../gameserver");
+var fstools = require(__dirname + "/../fstools");
+var WebSocketUser = require(__dirname + "/../websocketuser");
 
 /**
  * The view
@@ -64,20 +66,35 @@ module.exports = function (user, frontendMessage, callback) {
                     });
                 });
                 break;
+            case "loadLog":
+                var path = gameserver.getFolder(frontendMessage.id) + "/" + frontendMessage.file + ".log";
+                if (fs.existsSync(path)) {
+                    callback(fs.readFileSync(path).toString());
+                    if (frontendMessage.file != "console") {
+                        fstools.tailFile(path, function (data) {
+                            for (var j = 0; j < WebSocketUser.instances.length; j++) {
+                                var user = WebSocketUser.instances[j];
+                                user.send(frontendMessage.file + "-tail", {
+                                    "server": frontendMessage.id,
+                                    "data": {"time": new Date(), "message": data, "type": "debug"}
+                                });
+                            }
+                        });
+                    }
+                }
+                break;
             case "load":
-                if(typeof servers[frontendMessage.id] == "undefined"){
+                if (typeof servers[frontendMessage.id] == "undefined") {
                     callback();
                     return;
                 }
                 var server = servers[frontendMessage.id];
-                var path = gameserver.getFolder(frontendMessage.id) + "/console.log";
                 callback({
-                    "serverData": server,
-                    "consoleLog": fs.existsSync(path) ? fs.readFileSync(path).toString() : ""
+                    "serverData": server
                 });
                 break;
             default:
-                if(typeof servers[frontendMessage.id] == "undefined"){
+                if (typeof servers[frontendMessage.id] == "undefined") {
                     callback();
                     return;
                 }

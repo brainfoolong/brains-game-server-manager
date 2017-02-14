@@ -1,11 +1,18 @@
 "use strict";
 
 var fs = require("fs");
+var Tail = require('tail').Tail;
 
 /**
  * FS helper tools
  */
 var fstools = {};
+
+/**
+ * Tailed files
+ * @type {object<string, Tail>}
+ */
+fstools.tailedFiles = {};
 
 /**
  * Delete directories and files recursive
@@ -24,6 +31,31 @@ fstools.deleteRecursive = function (path) {
         });
         fs.rmdirSync(path);
     }
+};
+
+/**
+ * Tail a file
+ * @param {string} file
+ * @param {function} callback
+ */
+
+fstools.tailFile = function (file, callback) {
+    if (typeof fstools.tailedFiles[file] != "undefined") {
+        fstools.tailedFiles[file].unwatch();
+        delete fstools.tailedFiles[file];
+    }
+    var tail = new Tail(file);
+
+    tail.on("line", callback);
+
+    tail.on("error", function () {
+        if (typeof fstools.tailedFiles[file] != "undefined") {
+            fstools.tailedFiles[file].unwatch();
+            delete fstools.tailedFiles[file];
+        }
+    });
+
+    fstools.tailedFiles[file] = tail;
 };
 
 module.exports = fstools;

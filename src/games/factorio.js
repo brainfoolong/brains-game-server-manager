@@ -81,7 +81,7 @@ factorio.onCustomFrontendMessage = function (serverId, message, callback) {
 factorio.getStatus = function (id, callback) {
     exec(gameserver.getFolder(id) + "/server.sh status", function (error, stdout) {
         var status = {
-            "status": stdout
+            "status": stdout.trim()
         };
         callback(status);
     });
@@ -175,7 +175,7 @@ factorio.createConfig = function (id) {
             templateData = templateData.replace(new RegExp("{_" + i + "_}", "i"), settingsData[i]);
         }
     }
-    fs.writeFile(serverFolder + "/server.sh", templateData);
+    fs.writeFile(serverFolder + "/server.sh", templateData, {"mode" : 0o777});
 };
 
 /**
@@ -242,7 +242,7 @@ factorio.updateServer = function (id, callback) {
                         }
                         gameserver.writeToConsole(id, "Copy unpacked files to final destination");
                         if (!fs.existsSync(serverFolder)) fs.mkdirSync(serverFolder, 0o777);
-                        exec("cd " + tmpFolder + "/factorio && cp -Rf * " + serverFolder, null, function (error) {
+                        exec("cd " + tmpFolder + "/factorio && cp -Rf * " + serverFolder + " && chmod -R 0777 " + gameserver.getFolder(id), null, function (error) {
                             if (error) {
                                 gameserver.writeToConsole(id, "Error while copying new server files: " + error, "error");
                                 if (callback) callback(false);

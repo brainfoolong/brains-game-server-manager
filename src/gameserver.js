@@ -1,7 +1,6 @@
 "use strict";
 
 var fs = require("fs");
-var Tail = require('tail').Tail;
 var WebSocketUser = require(__dirname + "/websocketuser");
 
 /**

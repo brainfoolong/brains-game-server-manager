@@ -5,6 +5,7 @@ var hash = require(__dirname + "/../hash");
 var gameserver = require(__dirname + "/../gameserver");
 var games = require(__dirname + "/../games");
 var fs = require("fs");
+var extend = require("extend");
 
 /**
  * The view
@@ -21,8 +22,10 @@ module.exports = function (user, frontendMessage, callback) {
     if (frontendMessage && frontendMessage.action == "save") {
         var formData = frontendMessage.formData;
         var id = frontendMessage.id || hash.random(32);
-        formData.id = id;
-        db.get("servers").set(id, formData).value();
+        var serverData = db.get("servers").value()[id] || {};
+        serverData.id = id;
+        extend(true, serverData, formData);
+        db.get("servers").set(id, serverData).value();
         var serverFolder = gameserver.getFolder(id);
         if (!fs.existsSync(serverFolder)) fs.mkdirSync(serverFolder, 0o777);
         games[formData.game].createConfig(id);
