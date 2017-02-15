@@ -463,7 +463,7 @@ body.is-not-admin [data-role='admin'] {
     padding-bottom: 10px;
 }
 
-.collapsable-trigger::before {
+.collapsable-trigger:before {
     content: "\e114";
     position: relative;
     top: 1px;
@@ -532,6 +532,7 @@ body.is-not-admin [data-role='admin'] {
 
 .log-window .message {
     display: inline-block;
+    white-space: pre;
 }
 
 .log-window .line.type-error {
@@ -595,4 +596,74 @@ form {
 
 .view-content.status-stopped .start-server {
     display: block;
+}
+
+.filebrowser .entry {
+    border-radius: 5px;
+    cursor: pointer;
+    position: relative;
+    transition: 0.2s;
+    padding: 3px;
+    padding-left: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 1px;
+}
+
+.filebrowser .entry:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.filebrowser .entry .size {
+    font-size: 80%;
+    color: #777777;
+}
+
+.filebrowser .entry.folder:before {
+    content: "\e118";
+    position: absolute;
+    display: inline-block;
+    left: -16px;
+    top: 7px;
+    font-family: 'Glyphicons Halflings';
+    font-style: normal;
+    font-weight: normal;
+    font-size: 80%;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    color: #ffc193;
+}
+
+.filebrowser .entry.file:before {
+    content: "\e022";
+    position: absolute;
+    display: inline-block;
+    left: -16px;
+    top: 7px;
+    font-family: 'Glyphicons Halflings';
+    font-style: normal;
+    font-weight: normal;
+    font-size: 80%;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    color: white;
+}
+
+.filebrowser .entry.parent-folder:before {
+    content: "\e091";
+    position: absolute;
+    display: inline-block;
+    left: -16px;
+    top: 7px;
+    font-family: 'Glyphicons Halflings';
+    font-style: normal;
+    font-weight: normal;
+    font-size: 80%;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    color: white;
+}
+
+.current-folder {
+    font-weight: bold;
+    margin-bottom: 10px;
 }

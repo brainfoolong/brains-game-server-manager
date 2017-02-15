@@ -56,9 +56,9 @@ function collapsable(container) {
  * @param {JQuery} container
  */
 function textareaAutoheight(container) {
-    container.find('textarea.autoheight').not(".autoheight-activated").each(function () {
+    container.find('textarea.autoheight').each(function () {
         this.setAttribute('style', 'height:' + (Math.max(20, this.scrollHeight)) + 'px;overflow-y:hidden;');
-    }).addClass("autoheight-activated").on('input focus', function () {
+    }).addClass("autoheight-activated").off("input.ah focus.ah").on('input.ah focus.ah', function () {
         this.style.height = 'auto';
         this.style.height = (Math.max(20, this.scrollHeight)) + 'px';
     }).triggerHandler("input");

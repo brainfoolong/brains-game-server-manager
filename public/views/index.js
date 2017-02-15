@@ -4,6 +4,7 @@ View.script = function (message) {
     var $logWindow = $(".log-window");
     var $autoscroll = $(".autoscroll");
     var $pickserver = $(".pickserver select");
+    var $filebrowser = $(".filebrowser");
 
     /**
      * Add a log message
@@ -60,6 +61,52 @@ View.script = function (message) {
             lang.replaceInHtml(tbody);
         });
     };
+
+    /**
+     * Load filebrowser for given folder
+     * @param {string} folder
+     */
+    var loadFilebrowser = function (folder) {
+        var parent = "";
+        if (folder.match(/\//)) {
+            var folders = folder.split("/");
+            folders.pop();
+            parent = folders.join("/");
+        }
+        $filebrowser.html('<div class="current-folder">' + folder + '</div>');
+        if (folder) {
+            $filebrowser.append('<div class="parent-folder select-folder entry" data-path="' + parent + '">' + t("index.filebrowser.parent") + '</div>');
+        }
+        View.send({"action": "getFilelist", "id": get("id"), "folder": folder}, function (files) {
+            for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                var path = folder + "/" + file.name;
+                $filebrowser.append('<div class="entry ' + (file.isDirectory ? "select-folder folder" : "select-file file") + '" data-path="' + path + '" data-folder="' + folder + '"><div class="name">' + file.name + '</div><div class="size">' + (file.size / 1024).toFixed(2) + ' kB | ' + new Date(file.mtime).toLocaleString() + '</div></div>');
+            }
+        });
+    };
+
+    $filebrowser.on("click", ".select-folder", function () {
+        loadFilebrowser($(this).attr("data-path"));
+    }).on("click", ".select-file", function () {
+        var $textarea = $('<textarea class="autoheight form-control">');
+        $textarea.val('loading...');
+        var file = $(this).attr("data-path");
+        var folder = $(this).attr("data-folder");
+        Modal.confirm($textarea, function (success) {
+            if (success) {
+                View.send({"action": "saveFile", "id": get("id"), "file": file, "data": $textarea.val()}, function () {
+                    loadFilebrowser(folder);
+                });
+            }
+        });
+        View.send({"action": "loadFile", "id": get("id"), "file": file}, function (fileData) {
+            $textarea.val(fileData);
+            setTimeout(function () {
+                textareaAutoheight($("#confirm"));
+            }, 500);
+        });
+    });
 
     $(".btn.update-server").on("click", function () {
         Modal.confirm(t("index.update-server.confirm"), function (success) {
@@ -223,6 +270,7 @@ View.script = function (message) {
                     });
                 });
                 updateBackups();
+                loadFilebrowser("");
             }
         });
     }

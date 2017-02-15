@@ -5,6 +5,7 @@
 </div>
 
 <div class="index-server hidden">
+    <div class="game-content"></div>
     <h4 class="collapsable-trigger" data-collapsable-target="index.logs" data-translate="index.logs"></h4>
     <div class="collapsable-target" data-collapsable-id="index.logs">
         <ul class="nav nav-tabs log-tabs">
@@ -16,7 +17,8 @@
         <div class="log-window"></div>
         <div class="form-group input-group form-inline execute-command">
             <span class="input-group-addon"><i class="glyphicon glyphicon-chevron-right"></i></span>
-            <input type="text" class="form-control pipe-command" data-translate-property="placeholder,index.input.console">
+            <input type="text" class="form-control pipe-command"
+                   data-translate-property="placeholder,index.input.console">
             <select class="selectpicker autoscroll">
                 <option value="true" data-translate="index.logs.autoscroll.enabled"></option>
                 <option value="false" data-translate="index.logs.autoscroll.disabled"></option>
@@ -25,7 +27,7 @@
     </div>
 
     <div class="require-installed">
-        <h4 class="collapsable-trigger" data-collapsable-target="index.startstop">Start / Stop server</h4>
+        <h4 class="collapsable-trigger" data-collapsable-target="index.startstop" data-translate="index.startstop"></h4>
         <div class="collapsable-target" data-collapsable-id="index.startstop">
             <pre><span data-translate="index.serverstatus"></span>: <span class="server-status"></span></pre>
             <span class="btn start-server btn-success" data-translate="index.start-server"></span>
@@ -33,14 +35,14 @@
         </div>
     </div>
 
-    <h4 class="collapsable-trigger" data-collapsable-target="index.install">Install / Update server</h4>
+    <h4 class="collapsable-trigger" data-collapsable-target="index.install" data-translate="index.install"></h4>
     <div class="collapsable-target" data-collapsable-id="index.install">
         <p data-translate="index.install.info"></p>
         <pre>Installed: <span class="version-installed"></span> | Latest: <span class="version-available"></span></pre>
         <span class="btn btn-info update-server" data-translate="index.btn.update"></span>
     </div>
 
-    <h4 class="collapsable-trigger" data-collapsable-target="index.backup">Backup</h4>
+    <h4 class="collapsable-trigger" data-collapsable-target="index.backup" data-translate="index.backup"></h4>
     <div class="collapsable-target" data-collapsable-id="index.backup">
         <span class="btn create-backup btn-primary" data-translate="index.backup.btn"></span>
         <div class="existing-backups hidden">
@@ -58,5 +60,13 @@
             </table>
         </div>
     </div>
-    <div class="game-content"></div>
+
+
+    <div class="require-installed">
+        <h4 class="collapsable-trigger" data-collapsable-target="index.filebrowser"
+            data-translate="index.filebrowser"></h4>
+        <div class="collapsable-target" data-collapsable-id="index.filebrowser">
+            <div class="filebrowser"></div>
+        </div>
+    </div>
 </div>

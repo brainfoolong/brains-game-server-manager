@@ -31,7 +31,7 @@ case "$1" in
 		    rm $PIDFILE
 		fi
 		echo "Starting $LABEL... "
-		$BASEDIR/factorio/bin/x64/factorio --port {_port_} --start-server $BASEDIR/maps/{_map_}.zip --server-settings $BASEDIR/server-settings.json > $BASEDIR/output.log 2> $BASEDIR/error.log &
+		$BASEDIR/factorio/bin/x64/factorio --port {_port_} --start-server $BASEDIR/maps/{_map_}.zip --server-settings $BASEDIR/server-settings-generated.json > $BASEDIR/output.log 2> $BASEDIR/error.log &
 		PID=$!
 		ps -p ${PID} > /dev/null 2>&1
 		if [ "$?" -ne "0" ]; then

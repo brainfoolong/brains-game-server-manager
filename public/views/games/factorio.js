@@ -51,11 +51,15 @@ View.script = function () {
             var $tbody = $("table.factorio-maps-table tbody");
             $tbody.children().remove();
             $.each(mapsData, function (mapId, mapData) {
-                $tbody.append('<tr data-id="' + mapId + '"><td>' + mapId + '</td>' +
+                var $tr = $('<tr data-id="' + mapId + '"><td>' + mapId + '</td>' +
                     '<td>' + t(mapData.active ? "yes" : "no") + '</td>' +
                     '<td><a href="/index?id=' + get("id") + '&map=' + mapId + '" data-translate="edit" ' +
                     'class="btn btn-info btn-sm page-link"></a><span class="btn btn-danger btn-sm delete" data-translate="delete"></span></td>' +
                     '</tr>');
+                if (mapData.active) {
+                    $tr.find("a.btn").remove();
+                }
+                $tbody.append($tr);
             });
             lang.replaceInHtml($tbody);
 

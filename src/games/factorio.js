@@ -56,6 +56,11 @@ factorio.onCustomFrontendMessage = function (serverId, message, callback) {
                 server.factorioMaps[id] = message.formData;
                 if (message.formData.active) {
                     server.factorio.map = id;
+                    // reset all other active maps
+                    for (var i in server.factorioMaps) {
+                        if (i == id) continue;
+                        server.factorioMaps[i].active = false;
+                    }
                 }
                 db.get("servers").set(serverId, server).value();
             }
@@ -117,7 +122,7 @@ factorio.createMap = function (id, map, mapData, callback) {
         callback(null, null);
         return;
     }
-    var settingsFile = gameserver.getFolder(id) + "/map-settings.json";
+    var settingsFile = gameserver.getFolder(id) + "/map-settings-generated.json";
     fs.writeFileSync(settingsFile, JSON.stringify(mapData), {"mode": 0o777});
     factorio.exec(id, "--create " + mapFile + " --map-gen-settings " + settingsFile, callback);
 };
@@ -168,7 +173,7 @@ factorio.createConfig = function (id) {
         "public": settingsData.visibility && settingsData.visibility.indexOf("public") > -1,
         "lan": settingsData.visibility && settingsData.visibility.indexOf("lan") > -1,
     };
-    fs.writeFile(serverFolder + "/server-settings.json", JSON.stringify(settingsData));
+    fs.writeFile(serverFolder + "/server-settings-generated.json", JSON.stringify(settingsData));
 
     // create shellscript
     var template = __dirname + "/factorio.sh";

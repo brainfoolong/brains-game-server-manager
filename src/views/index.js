@@ -98,15 +98,45 @@ module.exports = function (user, frontendMessage, callback) {
                     callback(version);
                 });
                 break;
+            case "saveFile":
+                var file = serverFolder + frontendMessage.file;
+                fs.writeFileSync(file, frontendMessage.data, {"mode" : 0o777});
+                callback({"note": {"message": "index.filebrowser.saved", "type": "success"}});
+                break;
+            case "loadFile":
+                var file = serverFolder + frontendMessage.file;
+                if (fs.existsSync(file)) {
+                    callback(fs.readFileSync(file).toString());
+                    return;
+                }
+                callback("");
+                break;
             case "getFilelist":
-                var folder = serverFolder + "/" + server.game + frontendMessage.folder;
+                var folder = serverFolder + frontendMessage.folder;
                 var arr = [];
                 if (fs.existsSync(folder)) {
-                    var files = fs.readFileSync(folder);
+                    var files = fs.readdirSync(folder);
                     for (var i = 0; i < files.length; i++) {
                         var file = files[i];
                         var stat = fs.statSync(folder + "/" + file);
-                        arr.push({"name": file, "size": stat.size});
+                        if (!stat.isDirectory()) continue;
+                        arr.push({
+                            "name": file,
+                            "size": stat.size,
+                            "isDirectory": stat.isDirectory(),
+                            "mtime": stat.mtime
+                        });
+                    }
+                    for (var i = 0; i < files.length; i++) {
+                        var file = files[i];
+                        var stat = fs.statSync(folder + "/" + file);
+                        if (stat.isDirectory()) continue;
+                        arr.push({
+                            "name": file,
+                            "size": stat.size,
+                            "isDirectory": stat.isDirectory(),
+                            "mtime": stat.mtime
+                        });
                     }
                 }
                 callback(arr);
