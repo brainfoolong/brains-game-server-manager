@@ -11,6 +11,10 @@ var exec = require('child_process').exec;
  * @param {function} callback
  */
 module.exports = function (user, frontendMessage, callback) {
+    if (!user.userData.admin) {
+        callback({"accessdenied": true});
+        return;
+    }
     var settings = db.get("settings").value();
     exec("which steamcmd", null, function (error, stdout) {
         var steamcmdDefault = !error ? stdout.toString().trim() : null;

@@ -44,6 +44,21 @@ module.exports = function (user, frontendMessage, callback) {
                 games[server.game].stopServer(frontendMessage.id);
                 callback({"note": {"message": "index.stop-server.scheduled", "type": "info", "delay": 20000}});
                 break;
+            case "pipeCommand":
+                var server = servers[frontendMessage.id];
+                if (typeof games[server.game].pipeCommand == "function") {
+                    games[server.game].getStatus(frontendMessage.id, function (status) {
+                        if (status.status == "running") {
+                            callback({"note": {"message": "index.pipeCommand.sent", "type": "info"}});
+                            return;
+                        }
+                        callback({"note": {"message": "index.pipeCommand.notrunning", "type": "danger"}});
+                    });
+                    games[server.game].pipeCommand(frontendMessage.id, frontendMessage.command);
+                    return;
+                }
+                callback({"note": {"message": "index.pipeCommand.notavailable", "type": "danger"}});
+                break;
             case "startServer":
                 var server = servers[frontendMessage.id];
                 games[server.game].startServer(frontendMessage.id);
@@ -83,6 +98,25 @@ module.exports = function (user, frontendMessage, callback) {
                 games[server.game].getLatestVersion(frontendMessage.id, server.branch, function (version) {
                     callback(version);
                 });
+                break;
+            case "getFilelist":
+                var server = servers[frontendMessage.id];
+                if (server) {
+                    var serverFolder = gameserver.getFolder(frontendMessage.id);
+                    var folder = serverFolder + "/" + server.game + frontendMessage.folder;
+                    var arr = [];
+                    if (fs.existsSync(folder)) {
+                        var files = fs.readFileSync(folder);
+                        for (var i = 0; i < files.length; i++) {
+                            var file = files[i];
+                            var stat = fs.statSync(folder + "/" + file);
+                            arr.push({"name": file, "size": stat.size});
+                        }
+                    }
+                    callback(arr);
+                    return;
+                }
+                callback();
                 break;
             case "getBackups":
                 var serverFolder = gameserver.getFolder(frontendMessage.id);

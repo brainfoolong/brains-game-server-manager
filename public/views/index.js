@@ -2,19 +2,64 @@
 View.script = function (message) {
 
     var $logWindow = $(".log-window");
-    var autoscroll = $(".autoscroll");
+    var $autoscroll = $(".autoscroll");
+    var $pickserver = $(".pickserver select");
 
-    for (var i in message.serverlist) {
-        var server = message.serverlist[i];
-        $(".pickserver select").append($('<option>').attr("value", i).text(server));
-    }
-    lang.replaceInHtml($("#content"));
-    $(".pickserver select").val(get("id")).on("change", function () {
-        location.href = "/index?id=" + this.value;
-    });
+    /**
+     * Add a log message
+     * @param {object} messageData
+     * @param {boolean} fromTail
+     */
+    var addLogMessage = function (messageData, fromTail) {
+        var langKey = messageData.message;
+        var langParams = null;
+        if (typeof messageData.message == "object") {
+            langKey = messageData.message[0];
+            langParams = messageData.message[1];
+        }
+        var $message = $('<div>').addClass("line type-" + messageData.type).html('<time>' + new Date(messageData.time).toLocaleString() + '</time><div class="message text-' + messageData.type + '"></div>');
+        if (!messageData.time) $message.find("time").remove();
+        $message.find(".message").html(t(langKey, langParams));
+        $logWindow.append($message);
+        if ($autoscroll.val() == "true") {
+            scrollTo($logWindow, 999999999);
+        }
+        if (fromTail && (messageData.type == "success" || messageData.type == "error")) {
+            updateServerStatus();
+            updateBackups();
+        }
+    };
 
-    autoscroll.val("true");
-    $("select.selectpicker").selectpicker();
+    /**
+     * Update server status
+     */
+    var updateServerStatus = function () {
+        View.send({"action": "getServerStatus", "id": get("id")}, function (status) {
+            if (status) {
+                $(".view-content").removeClass("status-stopped status-running").addClass("status-" + status.status);
+                $(".server-status").text(t("index.serverstatus." + status.status));
+            }
+        });
+    };
+
+    /**
+     * Update backups
+     */
+    var updateBackups = function () {
+        View.send({"action": "getBackups", "id": get("id")}, function (files) {
+            $(".existing-backups").toggleClass("hidden", !files.length);
+            // write to table
+            var tbody = $(".existing-backups table tbody");
+            tbody.html('');
+            $.each(files, function (id, file) {
+                tbody.append('<tr data-id="' + file.name + '"><td>' + file.name + '</td>' +
+                    '<td>' + (file.size / 1024 / 1024).toFixed(2) + 'MB</td>' +
+                    '<td><span class="btn btn-info btn-sm import" data-translate="index.backup.import"></span><span class="btn btn-danger btn-sm delete" data-translate="delete"></span></td>' +
+                    '</tr>');
+            });
+            lang.replaceInHtml(tbody);
+        });
+    };
 
     $(".btn.update-server").on("click", function () {
         Modal.confirm(t("index.update-server.confirm"), function (success) {
@@ -106,54 +151,36 @@ View.script = function (message) {
         });
     });
 
-    $(".log-tabs li").filter("[data-id='" + (Storage.get("index.logs.last") || "console") + "']").find("a").trigger("click");
+    $(".pipe-command").on("keyup", function (ev) {
+        if (ev.keyCode == 13) {
+            var cmd = this.value;
+            this.value = "";
+            View.send({"action": "pipeCommand", "id": get("id"), "command": cmd}, function () {
 
-    var addLogMessage = function (messageData, fromTail) {
-        if (fromTail && (messageData.type == "success" || messageData.type == "error")) {
-            updateServerInfo();
-            updateBackups();
-        }
-        var $message = $('<div>').addClass("line type-" + messageData.type).html('<time>' + new Date(messageData.time).toLocaleString() + '</time><div class="message text-' + messageData.type + '"></div>');
-        if (!messageData.time) $message.find("time").remove();
-        if (typeof messageData.message == "object") {
-            $message.find(".message").html(t(messageData.message[0], messageData.message[1]));
-        } else {
-            $message.find(".message").html(t(messageData.message));
-        }
-        $logWindow.append($message);
-        if (autoscroll.val() == "true") {
-            scrollTo($logWindow, 999999999);
-        }
-    };
-
-    var updateServerInfo = function () {
-        View.send({"action": "getServerStatus", "id": get("id")}, function (status) {
-            if (status) {
-                $(".view-content").removeClass("status-stopped status-running").addClass("status-" + status.status);
-                $(".server-status").text(t("index.serverstatus." + status.status));
-            }
-        });
-    };
-
-    var updateBackups = function () {
-        View.send({"action": "getBackups", "id": get("id")}, function (files) {
-            $(".existing-backups").toggleClass("hidden", !files.length);
-            // write to table
-            var tbody = $(".existing-backups table tbody");
-            tbody.html('');
-            $.each(files, function (id, file) {
-                tbody.append('<tr data-id="' + file.name + '"><td>' + file.name + '</td>' +
-                    '<td>' + (file.size / 1024 / 1024).toFixed(2) + 'MB</td>' +
-                    '<td><span class="btn btn-info btn-sm import" data-translate="index.backup.import"></span><span class="btn btn-danger btn-sm delete" data-translate="delete"></span></td>' +
-                    '</tr>');
             });
-            lang.replaceInHtml(tbody);
-        });
-    };
+        }
+    });
+
+    $pickserver.on("change", function () {
+        location.href = "/index?id=" + this.value;
+    });
+
+    for (var i in message.serverlist) {
+        var server = message.serverlist[i];
+        $pickserver.append($('<option>').attr("value", i).text(server));
+    }
+    lang.replaceInHtml($("#content"));
+    $pickserver.val(get("id"));
+
+    $autoscroll.val("true");
+    $("select.selectpicker").selectpicker();
 
     if (get("id")) {
-        Interval.create("index.serverinfo", updateServerInfo, 10000);
-        updateServerInfo();
+
+        $(".log-tabs li").filter("[data-id='" + (Storage.get("index.logs.last") || "console") + "']").find("a").trigger("click");
+
+        Interval.create("index.serverinfo", updateServerStatus, 10000);
+        updateServerStatus();
         Socket.onMessage("console-tail", function (action, message) {
             if (action == "console-tail" && message.server == get("id") && $(".log-tabs .active").attr("data-id") == "console") {
                 addLogMessage(message.data, true);
@@ -177,6 +204,7 @@ View.script = function (message) {
         View.send({"action": "load", "id": get("id")}, function (loadMessage) {
             if (loadMessage && loadMessage.serverData) {
                 $(".view-content").addClass("game-" + loadMessage.serverData.game).attr("data-game", loadMessage.serverData.game);
+                $(".log-tabs li")
                 $.get("views/games/" + loadMessage.serverData.game + ".html", function (html) {
                     $(".game-content").html(html);
                     $.getScript("views/games/" + loadMessage.serverData.game + ".js", function () {

@@ -38,7 +38,7 @@ gameserver.loadServerBackup = function (id, file, callback) {
                     if (callback) callback(false);
                     return;
                 }
-                gameserver.writeToConsole(id, "console.backup.import.4", "success");
+                gameserver.writeToConsole(id, "console.backup.import.success.1", "success");
                 if (callback) callback(true);
             });
         }
@@ -62,7 +62,7 @@ gameserver.createServerBackup = function (id, callback) {
             if (callback) callback(false);
             return;
         }
-        gameserver.writeToConsole(id, "console.backup.create.2", "success");
+        gameserver.writeToConsole(id, "console.backup.create.success.1", "success");
         if (callback) callback(true);
     });
 };

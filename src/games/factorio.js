@@ -195,7 +195,7 @@ factorio.startServer = function (id, callback) {
     }
     var bin = gameserver.getFolder(id) + "/server.sh";
     exec(bin + " start", function (error, stdout) {
-        gameserver.writeToConsole(id, ["console.startServer.2", {"msg": stdout}], "success");
+        gameserver.writeToConsole(id, ["console.startServer.success.1", {"msg": stdout}], "success");
         if (callback) callback(true);
     });
 };
@@ -209,7 +209,7 @@ factorio.stopServer = function (id, callback) {
     var bin = gameserver.getFolder(id) + "/server.sh";
     gameserver.writeToConsole(id, "console.stopServer.1", "info");
     exec(bin + " stop", function (error, stdout) {
-        gameserver.writeToConsole(id, ["console.stopServer.2", {"msg": stdout}], "success");
+        gameserver.writeToConsole(id, ["console.stopServer.success.1", {"msg": stdout}], "success");
         if (callback) callback(true);
     });
 };
@@ -253,7 +253,7 @@ factorio.updateServer = function (id, callback) {
                                 return;
                             }
                             fstools.deleteRecursive(tmpFolder);
-                            gameserver.writeToConsole(id, "console.factorio.updateServer.6", "success");
+                            gameserver.writeToConsole(id, "console.factorio.updateServer.success.1", "success");
                             if (callback) callback(true);
                         });
                     });

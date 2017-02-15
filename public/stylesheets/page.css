@@ -596,7 +596,3 @@ form {
 .view-content.status-stopped .start-server {
     display: block;
 }
-
-.view-content.game-factorio .execute-command {
-    display: none;
-}
