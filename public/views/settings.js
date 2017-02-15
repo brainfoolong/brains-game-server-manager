@@ -1,8 +1,8 @@
 "use strict";
 View.script = function (message) {
     var values = message;
-    var form = $(".form");
-    Form.create(form, "settings", {
+    var $form = $(".form");
+    Form.create($form, "settings", {
         "steamcmd": {
             "type": "text",
             "placeholder": message.steamcmdDefault ? "settings.default_placeholder" : null,

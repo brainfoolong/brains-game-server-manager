@@ -21,8 +21,7 @@ var gameserver = {};
 gameserver.loadServerBackup = function (id, file, callback) {
     var servers = db.get("servers").value();
     var server = servers[id];
-    var games = require(__dirname + "/games");
-    games[server.game].stopServer(id, function () {
+    gameserver.getGame(server.game).stopServer(id, function () {
         var backupFile = gameserver.getFolder(id) + "/../backups/" + file;
         if (fs.existsSync(backupFile)) {
             var serverFolder = gameserver.getFolder(id);
@@ -34,7 +33,7 @@ gameserver.loadServerBackup = function (id, file, callback) {
             gameserver.writeToConsole(id, "console.backup.import.3");
             exec("cd " + serverFolder + " && " + settings.tar + " -xf '" + backupFile + "'", null, function (error) {
                 if (error) {
-                    gameserver.writeToConsole(id, ["console.backup.import.error.1", {"error" : error}], "error");
+                    gameserver.writeToConsole(id, ["console.backup.import.error.1", {"error": error}], "error");
                     if (callback) callback(false);
                     return;
                 }
@@ -55,10 +54,10 @@ gameserver.createServerBackup = function (id, callback) {
     var backupsFolder = serverFolder + "/../backups";
     var backupFile = backupsFolder + "/" + new Date().toISOString() + ".tar";
     var settings = db.get("settings").value();
-    gameserver.writeToConsole(id, ["console.backup.create.1", {"file" : backupFile}], "info");
+    gameserver.writeToConsole(id, ["console.backup.create.1", {"file": backupFile}], "info");
     exec("cd " + serverFolder + " && " + settings.tar + " -zcf '" + backupFile + "' .", null, function (error) {
         if (error) {
-            gameserver.writeToConsole(id, ["console.backup.create.error.1", {"error" : error}], "error");
+            gameserver.writeToConsole(id, ["console.backup.create.error.1", {"error": error}], "error");
             if (callback) callback(false);
             return;
         }
@@ -100,5 +99,15 @@ gameserver.writeToConsole = function (id, message, type) {
         user.send("console-tail", {"server": id, "data": messageData});
     }
 };
+
+/**
+ * Get the game object
+ * @param {object} game
+ * @return {object}
+ */
+gameserver.getGame = function (game) {
+    return require(__dirname + "/games/" + game);
+};
+
 
 module.exports = gameserver;

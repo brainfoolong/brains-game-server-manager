@@ -3,7 +3,6 @@
 var db = require(__dirname + "/../db");
 var hash = require(__dirname + "/../hash");
 var gameserver = require(__dirname + "/../gameserver");
-var games = require(__dirname + "/../games");
 var fs = require("fs");
 var extend = require("extend");
 var path = require('path');
@@ -32,7 +31,7 @@ module.exports = function (user, frontendMessage, callback) {
         if (!fs.existsSync(serverFolder)) fs.mkdirSync(serverFolder, 0o777);
         if (!fs.existsSync(serverFolder + "/..")) fs.mkdirSync(serverFolder + "/..", 0o777);
         if (!fs.existsSync(serverFolder + "/../backups")) fs.mkdirSync(serverFolder + "/../backups", 0o777);
-        games[formData.game].createConfig(id);
+        gameserver.getGame(formData.game).createConfig(id);
         callback(true);
         return;
     }

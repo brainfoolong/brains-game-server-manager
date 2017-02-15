@@ -247,7 +247,8 @@ lang.values.en = {
     "modal.title.confirm": "Confirmation",
     "modal.accept": "Accept",
     "modal.cancel": "Cancel",
-    "loading": "Loading"
+    "loading": "Loading",
+    "dashboard" : "Dashboard"
 };
 
 // de values

@@ -1,8 +1,6 @@
 "use strict";
 View.script = function () {
-    var $gc = $(".game-content");
     var selectValues = ["none", "very-low", "low", "normal", "high", "very-high"];
-    var maps = {};
     var fields = {
         "id": {"type": "text", "required": true, "pattern": "[a-z_0-9-]+"},
         "active": {"type": "switch", "defaultValue": false},
@@ -49,25 +47,25 @@ View.script = function () {
     });
     var loadMaps = function () {
         View.send({"action": "getMaps", "id": get("id")}, function (mapsData) {
-            maps = mapsData || {};
             // write to table
-            var tbody = $("table.factorio-maps-table tbody");
-            tbody.children().remove();
-            $.each(maps, function (mapId, mapData) {
-                tbody.append('<tr data-id="' + mapId + '"><td>' + mapId + '</td>' +
+            var $tbody = $("table.factorio-maps-table tbody");
+            $tbody.children().remove();
+            $.each(mapsData, function (mapId, mapData) {
+                $tbody.append('<tr data-id="' + mapId + '"><td>' + mapId + '</td>' +
                     '<td>' + t(mapData.active ? "yes" : "no") + '</td>' +
                     '<td><a href="/index?id=' + get("id") + '&map=' + mapId + '" data-translate="edit" ' +
                     'class="btn btn-info btn-sm page-link"></a><span class="btn btn-danger btn-sm delete" data-translate="delete"></span></td>' +
                     '</tr>');
             });
-            lang.replaceInHtml(tbody);
+            lang.replaceInHtml($tbody);
 
-            $(".map-form").html('');
-            Form.create($(".map-form"), "factoriomaps", fields, function (formData) {
+            var $mapform = $(".map-form");
+            $mapform.html('');
+            Form.create($mapform, "factoriomaps", fields, function (formData) {
                 View.send({"action": "saveMap", "id": get("id"), "map": get("map"), "formData": formData}, function () {
                     View.loadUrl("/index?id=" + get("id"));
                 });
-            }, maps[get("map")]);
+            }, mapsData[get("map")]);
 
             if (get("map")) {
                 scrollTo("body", "#form-factoriomaps");

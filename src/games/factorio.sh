@@ -38,7 +38,7 @@ case "$1" in
 			echo "$LABEL could not start"
 		else
 			echo $PID > $PIDFILE
-			echo "$LABEL started"
+			echo "$LABEL booting now. See logs for details."
 		fi
 	;;
 	stop)
@@ -60,7 +60,7 @@ case "$1" in
 				echo "Server is not shutting down cleanly - killing"
 				kill -KILL $(cat $PIDFILE)
 			else
-				echo "Done"
+				echo "Stopped"
 			fi
 			rm $PIDFILE
 		else

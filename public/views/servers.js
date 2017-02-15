@@ -1,6 +1,6 @@
 "use strict";
 View.script = function (message) {
-    var form = $(".form");
+    var $form = $(".form");
     var fields = {
         "game": {"type": "select", "values": ["", "rust", "csgo", "factorio"], "required": true},
         "name": {"type": "text", "required": true},
@@ -51,7 +51,7 @@ View.script = function (message) {
         "factorio[auto_pause]": {"type": "switch", "attributes": {"game-field": "1"}, "defaultValue": true},
         "factorio[autosave_only_on_server]": {"type": "switch", "attributes": {"game-field": "1"}, "defaultValue": true}
     };
-    Form.create(form, "servers", fields, function (formData) {
+    Form.create($form, "servers", fields, function (formData) {
         View.send({"action": "save", "formData": formData, "id" : get("id")}, function (message) {
             if (message === true) {
                 note("saved", "success");
@@ -59,13 +59,13 @@ View.script = function (message) {
             }
         });
     }, message.servers[get("id")]);
-    form.on("change", "[name='game']", function () {
-        form.find("[data-game-field]").removeAttr("required").attr("disabled", true).closest(".form-field").addClass("hidden");
+    $form.on("change", "[name='game']", function () {
+        $form.find("[data-game-field]").removeAttr("required").attr("disabled", true).closest(".form-field").addClass("hidden");
         var game = this.value;
         if (!game) {
             return;
         }
-        form.find("[data-game-field]").each(function () {
+        $form.find("[data-game-field]").each(function () {
             if ($(this).attr("name").substr(0, game.length + 1) == game + "[") {
                 $(this).removeAttr("disabled").closest(".form-field").removeClass("hidden");
                 if ($(this).attr("data-required")) {
@@ -78,12 +78,12 @@ View.script = function (message) {
         });
     });
 
-    form.find("[name='game']").trigger("change");
+    $form.find("[name='game']").trigger("change");
 
     // write to table
-    var tbody = $("table.data-table tbody");
+    var $tbody = $("table.data-table tbody");
     $.each(message.servers, function (serverKey, server) {
-        tbody.append('<tr><td>' + server.name + '</td>' +
+        $tbody.append('<tr><td>' + server.name + '</td>' +
             '<td><a href="/servers?id=' + serverKey + '"  data-translate="edit" ' +
             'class="btn btn-info btn-sm page-link"></a></td>' +
             '</tr>');
