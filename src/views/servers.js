@@ -6,6 +6,7 @@ var gameserver = require(__dirname + "/../gameserver");
 var games = require(__dirname + "/../games");
 var fs = require("fs");
 var extend = require("extend");
+var path = require('path');
 
 /**
  * The view
@@ -27,9 +28,10 @@ module.exports = function (user, frontendMessage, callback) {
         extend(true, serverData, formData);
         db.get("servers").set(id, serverData).value();
         var serverFolder = gameserver.getFolder(id);
+        if (!fs.existsSync(path.dirname(serverFolder))) fs.mkdirSync(path.dirname(serverFolder), 0o777);
+        if (!fs.existsSync(serverFolder)) fs.mkdirSync(serverFolder, 0o777);
         if (!fs.existsSync(serverFolder + "/..")) fs.mkdirSync(serverFolder + "/..", 0o777);
         if (!fs.existsSync(serverFolder + "/../backups")) fs.mkdirSync(serverFolder + "/../backups", 0o777);
-        if (!fs.existsSync(serverFolder)) fs.mkdirSync(serverFolder, 0o777);
         games[formData.game].createConfig(id);
         callback(true);
         return;

@@ -21,18 +21,27 @@ var gameserver = {};
 gameserver.loadServerBackup = function (id, file, callback) {
     var servers = db.get("servers").value();
     var server = servers[id];
-    gameserver[server.game].stopServer(id, function () {
+    var games = require(__dirname + "/games");
+    games[server.game].stopServer(id, function () {
         var backupFile = gameserver.getFolder(id) + "/../backups/" + file;
-        gameserver.writeToConsole(id, "Server backup import started. Copying backup files to actual server folder", "info");
-        exec("cd " + gameserver.getFolder(id) + " && " + settings.tar + " -xcf '" + backupFile + "'", null, function (error) {
-            if (error) {
-                gameserver.writeToConsole(id, "Error while backup server files: " + error, "error");
-                if (callback) callback(false);
-                return;
-            }
-            gameserver.writeToConsole(id, "Server backup done.", "success");
-            if (callback) callback(true);
-        });
+        if (fs.existsSync(backupFile)) {
+            var serverFolder = gameserver.getFolder(id);
+            var settings = db.get("settings").value();
+            fstools.deleteRecursive(serverFolder);
+            fs.mkdirSync(serverFolder, {"mode": 0o777});
+            gameserver.writeToConsole(id, "Server backup import started", "info");
+            gameserver.writeToConsole(id, "Delete all current server files");
+            gameserver.writeToConsole(id, "Unpack all backup files");
+            exec("cd " + serverFolder + " && " + settings.tar + " -xf '" + backupFile + "'", null, function (error) {
+                if (error) {
+                    gameserver.writeToConsole(id, "Error while backup server files: " + error, "error");
+                    if (callback) callback(false);
+                    return;
+                }
+                gameserver.writeToConsole(id, "Server backup import done.", "success");
+                if (callback) callback(true);
+            });
+        }
     });
 };
 
@@ -46,7 +55,7 @@ gameserver.createServerBackup = function (id, callback) {
     var backupsFolder = serverFolder + "/../backups";
     var backupFile = backupsFolder + "/" + new Date().toISOString() + ".tar";
     var settings = db.get("settings").value();
-    gameserver.writeToConsole(id, "Server backup started. Copying server files to " + backupsFolder, "info");
+    gameserver.writeToConsole(id, "Server backup started. Backupfile: " + backupFile, "info");
     exec("cd " + serverFolder + " && " + settings.tar + " -zcf '" + backupFile + "' .", null, function (error) {
         if (error) {
             gameserver.writeToConsole(id, "Error while backup server files: " + error, "error");

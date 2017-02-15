@@ -459,6 +459,8 @@ body.is-not-admin [data-role='admin'] {
 
 .collapsable-trigger {
     cursor: pointer;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 .collapsable-trigger::before {
@@ -486,6 +488,12 @@ body.is-not-admin [data-role='admin'] {
     display: none;
 }
 
+.collapsable-target {
+    padding: 25px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
 .form-input {
     margin-bottom: 20px;
 }
@@ -501,10 +509,6 @@ body.is-not-admin [data-role='admin'] {
 }
 
 .pickserver {
-    margin-bottom: 40px;
-}
-
-.index-server .collapsable-target {
     margin-bottom: 40px;
 }
 
@@ -568,8 +572,7 @@ body.is-not-admin [data-role='admin'] {
 }
 
 .index-server p {
-    padding: 20px;
-    padding-left: 25px;
+    padding-bottom: 25px;
     color: #9cd3ff;
 }
 

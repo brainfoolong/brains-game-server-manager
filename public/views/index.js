@@ -86,11 +86,32 @@ View.script = function (message) {
         });
     });
 
+    $(".existing-backups").on("click", ".import", function () {
+        var file = $(this).closest("tr").attr("data-id");
+        Modal.confirm(t("index.backup.import.confirm"), function (success) {
+            if (success) {
+                View.send({"action": "loadServerBackup", "id": get("id"), "file": file}, function () {
+
+                });
+            }
+        });
+    }).on("click", ".delete", function () {
+        var file = $(this).closest("tr").attr("data-id");
+        Modal.confirm(t("index.backup.delete.confirm"), function (success) {
+            if (success) {
+                View.send({"action": "deleteServerBackup", "id": get("id"), "file": file}, function () {
+                    updateBackups();
+                });
+            }
+        });
+    });
+
     $(".log-tabs li").filter("[data-id='" + (Storage.get("index.logs.last") || "console") + "']").find("a").trigger("click");
 
-    var addLogMessage = function (messageData) {
-        if (messageData.type == "success" || messageData.type == "error") {
+    var addLogMessage = function (messageData, fromTail) {
+        if (fromTail && (messageData.type == "success" || messageData.type == "error")) {
             updateServerInfo();
+            updateBackups();
         }
         var $message = $('<div>').addClass("line type-" + messageData.type).html('<time>' + new Date(messageData.time).toLocaleString() + '</time><div class="message text-' + messageData.type + '">' + messageData.message + '</div>');
         if (!messageData.time) $message.find("time").remove();
@@ -109,23 +130,38 @@ View.script = function (message) {
         });
     };
 
+    var updateBackups = function () {
+        View.send({"action": "getBackups", "id": get("id")}, function (files) {
+            $(".existing-backups").toggleClass("hidden", !files.length);
+            // write to table
+            var tbody = $(".existing-backups table tbody");
+            tbody.html('');
+            $.each(files, function (id, file) {
+                tbody.append('<tr data-id="' + file.name + '"><td>' + file.name + '</td>' +
+                    '<td>' + (file.size / 1024 / 1024).toFixed(2) + 'MB</td>' +
+                    '<td><span class="btn btn-info btn-sm import" data-translate="index.backup.import"></span><span class="btn btn-danger btn-sm delete" data-translate="delete"></span></td>' +
+                    '</tr>');
+            });
+            lang.replaceInHtml(tbody);
+        });
+    };
 
     if (get("id")) {
         Interval.create("index.serverinfo", updateServerInfo, 10000);
         updateServerInfo();
         Socket.onMessage("console-tail", function (action, message) {
             if (action == "console-tail" && message.server == get("id") && $(".log-tabs .active").attr("data-id") == "console") {
-                addLogMessage(message.data);
+                addLogMessage(message.data, true);
             }
         });
         Socket.onMessage("output-tail", function (action, message) {
             if (action == "output-tail" && message.server == get("id") && $(".log-tabs .active").attr("data-id") == "output") {
-                addLogMessage(message.data);
+                addLogMessage(message.data, true);
             }
         });
         Socket.onMessage("error-tail", function (action, message) {
             if (action == "error-tail" && message.server == get("id") && $(".log-tabs .active").attr("data-id") == "error") {
-                addLogMessage(message.data);
+                addLogMessage(message.data, true);
             }
         });
         View.send({"action": "load", "id": get("id")}, function (loadMessage) {
@@ -148,6 +184,7 @@ View.script = function (message) {
                         $(".version-available").text(version);
                     });
                 });
+                updateBackups();
             }
         });
     }

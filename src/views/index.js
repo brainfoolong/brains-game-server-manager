@@ -50,14 +50,17 @@ module.exports = function (user, frontendMessage, callback) {
                 callback({"note": {"message": "index.start-server.scheduled", "type": "info", "delay": 20000}});
                 break;
             case "createServerBackup":
-                var server = servers[frontendMessage.id];
                 gameserver.createServerBackup(frontendMessage.id);
                 callback({"note": {"message": "index.backup.scheduled", "type": "info", "delay": 20000}});
                 break;
             case "loadServerBackup":
-                var server = servers[frontendMessage.id];
                 gameserver.loadServerBackup(frontendMessage.id, frontendMessage.file);
                 callback({"note": {"message": "index.backup.load.scheduled", "type": "info", "delay": 20000}});
+                break;
+            case "deleteServerBackup":
+                var file = gameserver.getFolder(frontendMessage.id) + "/../backups/" + frontendMessage.file;
+                if (fs.existsSync(file)) fs.unlinkSync(file);
+                callback({"note": {"message": "index.backup.deleted", "type": "success", "delay": 20000}});
                 break;
             case "getServerStatus":
                 var server = servers[frontendMessage.id];
@@ -81,6 +84,17 @@ module.exports = function (user, frontendMessage, callback) {
                     callback(version);
                 });
                 break;
+            case "getBackups":
+                var serverFolder = gameserver.getFolder(frontendMessage.id);
+                var files = fs.readdirSync(serverFolder + "/../backups");
+                var arr = [];
+                for (var i = 0; i < files.length; i++) {
+                    var file = files[i];
+                    var stat = fs.statSync(serverFolder + "/../backups/" + file);
+                    arr.push({"name": file, "size": stat.size});
+                }
+                callback(arr);
+                break;
             case "loadLog":
                 var path = gameserver.getFolder(frontendMessage.id) + "/" + frontendMessage.file + ".log";
                 if (fs.existsSync(path)) {
@@ -96,7 +110,9 @@ module.exports = function (user, frontendMessage, callback) {
                             }
                         });
                     }
+                    return;
                 }
+                callback("empty");
                 break;
             case "load":
                 if (typeof servers[frontendMessage.id] == "undefined") {
