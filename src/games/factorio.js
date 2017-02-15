@@ -188,14 +188,14 @@ factorio.createConfig = function (id) {
  */
 factorio.startServer = function (id, callback) {
     var server = db.get("servers").get(id).value();
-    gameserver.writeToConsole(id, "Server starting...", "info");
+    gameserver.writeToConsole(id, "console.startServer.1", "info");
     if (!server.factorio.map) {
-        gameserver.writeToConsole(id, "No active map set. Create one.", "error");
+        gameserver.writeToConsole(id, "console.startServer.error.1", "error");
         return;
     }
     var bin = gameserver.getFolder(id) + "/server.sh";
     exec(bin + " start", function (error, stdout) {
-        gameserver.writeToConsole(id, "Server started with message: " + stdout, "success");
+        gameserver.writeToConsole(id, ["console.startServer.2", {"msg": stdout}], "success");
         if (callback) callback(true);
     });
 };
@@ -207,9 +207,9 @@ factorio.startServer = function (id, callback) {
  */
 factorio.stopServer = function (id, callback) {
     var bin = gameserver.getFolder(id) + "/server.sh";
-    gameserver.writeToConsole(id, "Server stopping...", "info");
+    gameserver.writeToConsole(id, "console.stopServer.1", "info");
     exec(bin + " stop", function (error, stdout) {
-        gameserver.writeToConsole(id, "Server stopped with message: " + stdout, "success");
+        gameserver.writeToConsole(id, ["console.stopServer.2", {"msg": stdout}], "success");
         if (callback) callback(true);
     });
 };
@@ -222,7 +222,7 @@ factorio.stopServer = function (id, callback) {
 factorio.updateServer = function (id, callback) {
     var settings = db.get("settings").value();
     var serverData = db.get("servers").value()[id];
-    gameserver.writeToConsole(id, "Server update started", "info");
+    gameserver.writeToConsole(id, "console.factorio.updateServer.1", "info");
     factorio.getLatestVersion(id, serverData.factorio.branch, function (version) {
         factorio.getDownloadLink(id, version, function (url) {
             var lastLength = 0;
@@ -234,26 +234,26 @@ factorio.updateServer = function (id, callback) {
                 var length = 0;
                 fstools.deleteRecursive(tmpFolder);
                 fs.mkdirSync(tmpFolder, 0o777);
-                gameserver.writeToConsole(id, "Download for server update " + url + " started");
+                gameserver.writeToConsole(id, ["console.factorio.updateServer.2", {"url": url}]);
                 request(url, function () {
-                    gameserver.writeToConsole(id, "Package downloaded successfully");
-                    gameserver.writeToConsole(id, "Unpacking server to temp directory");
+                    gameserver.writeToConsole(id, "console.factorio.updateServer.3");
+                    gameserver.writeToConsole(id, "console.factorio.updateServer.4");
                     exec("cd " + tmpFolder + " && " + settings.tar + " xfv " + packageFile, null, function (error) {
                         if (error) {
-                            gameserver.writeToConsole(id, "Error while unpacking package: " + error, "error");
+                            gameserver.writeToConsole(id, ["console.factorio.updateServer.error.1", {"error": error}], "error");
                             if (callback) callback(false);
                             return;
                         }
-                        gameserver.writeToConsole(id, "Copy unpacked files to final destination");
+                        gameserver.writeToConsole(id, "console.factorio.updateServer.5");
                         if (!fs.existsSync(factorioFolder)) fs.mkdirSync(factorioFolder, 0o777);
                         exec("cd " + tmpFolder + "/factorio && cp -Rf * " + factorioFolder + " && chmod -R 0777 " + factorioFolder, null, function (error) {
                             if (error) {
-                                gameserver.writeToConsole(id, "Error while copying new server files: " + error, "error");
+                                gameserver.writeToConsole(id, ["console.factorio.updateServer.error.2", {"error": error}], "error");
                                 if (callback) callback(false);
                                 return;
                             }
                             fstools.deleteRecursive(tmpFolder);
-                            gameserver.writeToConsole(id, "Server update done. You can now start the server", "success");
+                            gameserver.writeToConsole(id, "console.factorio.updateServer.6", "success");
                             if (callback) callback(true);
                         });
                     });
@@ -262,7 +262,7 @@ factorio.updateServer = function (id, callback) {
                     var lengthMB = length / 1024 / 1024;
                     if (lastLength + 5 < lengthMB) {
                         lastLength = lengthMB;
-                        gameserver.writeToConsole(id, (lastLength).toFixed(2) + "MB received...");
+                        gameserver.writeToConsole(id, ["console.factorio.updateServer.7", {"mb": (lastLength).toFixed(2)}]);
                     }
                 }).pipe(fs.createWriteStream(packageFile));
             });
@@ -298,7 +298,7 @@ factorio.getAvailableVersions = function (callback) {
  * @param {function} callback
  */
 factorio.getLatestVersion = function (id, branch, callback) {
-    gameserver.writeToConsole(id, "Get latest available version");
+    gameserver.writeToConsole(id, "console.getLatestVersion.1");
     factorio.getAvailableVersions(function (versions) {
         var maxVersion = '0.0.0';
         for (var i = 0; i < versions.length; i++) {
@@ -311,7 +311,7 @@ factorio.getLatestVersion = function (id, branch, callback) {
                 maxVersion = obj.to;
             }
         }
-        gameserver.writeToConsole(id, "Version: " + maxVersion);
+        gameserver.writeToConsole(id, ["console.getLatestVersion.2", {"version": maxVersion}]);
         callback(maxVersion);
     });
 };
@@ -322,15 +322,15 @@ factorio.getLatestVersion = function (id, branch, callback) {
  * @param {function} callback
  */
 factorio.getInstalledVersion = function (id, callback) {
-    gameserver.writeToConsole(id, "Get currently installed version");
+    gameserver.writeToConsole(id, "console.getInstalledVersion.1");
     factorio.exec(id, "--version", function (error, stdout) {
         if (error) {
-            gameserver.writeToConsole(id, "Error getting current factorio server version: " + error, "error");
+            gameserver.writeToConsole(id, ["console.getInstalledVersion.error.1", {"error": error}], "error");
             callback(null);
             return;
         }
         var version = stdout.match(/Version:([ 0-9\.\-a-z_]+)/i)[1].trim();
-        gameserver.writeToConsole(id, "Version: " + version);
+        gameserver.writeToConsole(id, ["console.getInstalledVersion.2", {"version": version}]);
         callback(version);
     });
 };
@@ -342,7 +342,7 @@ factorio.getInstalledVersion = function (id, callback) {
  * @param {function} callback
  */
 factorio.getDownloadLink = function (id, version, callback) {
-    gameserver.writeToConsole(id, "Get download link to version " + version);
+    gameserver.writeToConsole(id, ["console.factorio.getDownloadLink.1", {"version": version}]);
     request({
         "url": "https://www.factorio.com/get-download/" + version + "/headless/linux64",
         "followRedirect": false
@@ -352,7 +352,7 @@ factorio.getDownloadLink = function (id, version, callback) {
             return;
         }
         var url = body.match(/href="(.*?)"/i)[1].replace(/\&amp;/g, "&");
-        gameserver.writeToConsole(id, "URL: " + url);
+        gameserver.writeToConsole(id, ["console.factorio.getDownloadLink.2", {"url": url}]);
         callback(url);
     });
 };

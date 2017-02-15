@@ -113,8 +113,13 @@ View.script = function (message) {
             updateServerInfo();
             updateBackups();
         }
-        var $message = $('<div>').addClass("line type-" + messageData.type).html('<time>' + new Date(messageData.time).toLocaleString() + '</time><div class="message text-' + messageData.type + '">' + messageData.message + '</div>');
+        var $message = $('<div>').addClass("line type-" + messageData.type).html('<time>' + new Date(messageData.time).toLocaleString() + '</time><div class="message text-' + messageData.type + '"></div>');
         if (!messageData.time) $message.find("time").remove();
+        if (typeof messageData.message == "object") {
+            $message.find(".message").html(t(messageData.message[0], messageData.message[1]));
+        } else {
+            $message.find(".message").html(t(messageData.message));
+        }
         $logWindow.append($message);
         if (autoscroll.val() == "true") {
             scrollTo($logWindow, 999999999);
@@ -161,6 +166,11 @@ View.script = function (message) {
         });
         Socket.onMessage("error-tail", function (action, message) {
             if (action == "error-tail" && message.server == get("id") && $(".log-tabs .active").attr("data-id") == "error") {
+                addLogMessage(message.data, true);
+            }
+        });
+        Socket.onMessage("steamcmd-tail", function (action, message) {
+            if (action == "steamcmd-tail" && message.server == get("id") && $(".log-tabs .active").attr("data-id") == "steamcmd") {
                 addLogMessage(message.data, true);
             }
         });

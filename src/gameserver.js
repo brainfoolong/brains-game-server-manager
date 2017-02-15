@@ -29,16 +29,16 @@ gameserver.loadServerBackup = function (id, file, callback) {
             var settings = db.get("settings").value();
             fstools.deleteRecursive(serverFolder);
             fs.mkdirSync(serverFolder, {"mode": 0o777});
-            gameserver.writeToConsole(id, "Server backup import started", "info");
-            gameserver.writeToConsole(id, "Delete all current server files");
-            gameserver.writeToConsole(id, "Unpack all backup files");
+            gameserver.writeToConsole(id, "console.backup.import.1", "info");
+            gameserver.writeToConsole(id, "console.backup.import.2");
+            gameserver.writeToConsole(id, "console.backup.import.3");
             exec("cd " + serverFolder + " && " + settings.tar + " -xf '" + backupFile + "'", null, function (error) {
                 if (error) {
-                    gameserver.writeToConsole(id, "Error while backup server files: " + error, "error");
+                    gameserver.writeToConsole(id, ["console.backup.import.error.1", {"error" : error}], "error");
                     if (callback) callback(false);
                     return;
                 }
-                gameserver.writeToConsole(id, "Server backup import done.", "success");
+                gameserver.writeToConsole(id, "console.backup.import.4", "success");
                 if (callback) callback(true);
             });
         }
@@ -55,14 +55,14 @@ gameserver.createServerBackup = function (id, callback) {
     var backupsFolder = serverFolder + "/../backups";
     var backupFile = backupsFolder + "/" + new Date().toISOString() + ".tar";
     var settings = db.get("settings").value();
-    gameserver.writeToConsole(id, "Server backup started. Backupfile: " + backupFile, "info");
+    gameserver.writeToConsole(id, ["console.backup.create.1", {"file" : backupFile}], "info");
     exec("cd " + serverFolder + " && " + settings.tar + " -zcf '" + backupFile + "' .", null, function (error) {
         if (error) {
-            gameserver.writeToConsole(id, "Error while backup server files: " + error, "error");
+            gameserver.writeToConsole(id, ["console.backup.create.error.1", {"error" : error}], "error");
             if (callback) callback(false);
             return;
         }
-        gameserver.writeToConsole(id, "Server backup done.", "success");
+        gameserver.writeToConsole(id, "console.backup.create.2", "success");
         if (callback) callback(true);
     });
 };
@@ -79,7 +79,7 @@ gameserver.getFolder = function (id) {
 /**
  * Append to console logfile
  * @param {string} id
- * @param {string} message
+ * @param {string|[]} message
  * @param {string=} type
  */
 gameserver.writeToConsole = function (id, message, type) {
