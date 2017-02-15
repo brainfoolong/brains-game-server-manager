@@ -94,7 +94,7 @@ factorio.getStatus = function (id, callback) {
  * @param {function} callback
  */
 factorio.exec = function (id, cmd, callback) {
-    var bin = gameserver.getFolder(id) + "/server/bin/x64/factorio";
+    var bin = gameserver.getFolder(id) + "/factorio/bin/x64/factorio";
     if (fs.existsSync(bin)) {
         exec(bin + " " + cmd, null, callback);
         return;
@@ -110,7 +110,9 @@ factorio.exec = function (id, cmd, callback) {
  * @param {function} callback
  */
 factorio.createMap = function (id, map, mapData, callback) {
-    var mapFile = gameserver.getFolder(id) + "/maps/" + map + ".zip";
+    var mapsFolder = gameserver.getFolder(id) + "/maps";
+    if (!fs.existsSync(mapsFolder)) fs.mkdirSync(mapsFolder, 0o777);
+    var mapFile = mapsFolder + "/" + map + ".zip";
     if (fs.existsSync(mapFile)) {
         callback(null, null);
         return;
@@ -152,6 +154,7 @@ factorio.checkRequirements = function () {
 factorio.createConfig = function (id) {
     var server = db.get("servers").get(id).cloneDeep().value();
     var serverFolder = gameserver.getFolder(id);
+    if (!fs.existsSync(serverFolder)) fs.mkdirSync(serverFolder, {"mode": 0o777});
 
     // create server settings file
     var settingsData = server.factorio;
@@ -175,7 +178,7 @@ factorio.createConfig = function (id) {
             templateData = templateData.replace(new RegExp("{_" + i + "_}", "i"), settingsData[i]);
         }
     }
-    fs.writeFile(serverFolder + "/server.sh", templateData, {"mode" : 0o777});
+    fs.writeFile(serverFolder + "/server.sh", templateData, {"mode": 0o777});
 };
 
 /**
@@ -224,8 +227,9 @@ factorio.updateServer = function (id, callback) {
         factorio.getDownloadLink(id, version, function (url) {
             var lastLength = 0;
             factorio.stopServer(id, function () {
-                var serverFolder = gameserver.getFolder(id) + "/server";
-                var tmpFolder = gameserver.getFolder(id) + "/tmp";
+                var serverFolder = gameserver.getFolder(id);
+                var factorioFolder = serverFolder + "/factorio";
+                var tmpFolder = serverFolder + "/../tmp";
                 var packageFile = tmpFolder + "/package.tar.gz";
                 var length = 0;
                 fstools.deleteRecursive(tmpFolder);
@@ -241,16 +245,14 @@ factorio.updateServer = function (id, callback) {
                             return;
                         }
                         gameserver.writeToConsole(id, "Copy unpacked files to final destination");
-                        if (!fs.existsSync(serverFolder)) fs.mkdirSync(serverFolder, 0o777);
-                        exec("cd " + tmpFolder + "/factorio && cp -Rf * " + serverFolder + " && chmod -R 0777 " + gameserver.getFolder(id), null, function (error) {
+                        if (!fs.existsSync(factorioFolder)) fs.mkdirSync(factorioFolder, 0o777);
+                        exec("cd " + tmpFolder + "/factorio && cp -Rf * " + factorioFolder + " && chmod -R 0777 " + factorioFolder, null, function (error) {
                             if (error) {
                                 gameserver.writeToConsole(id, "Error while copying new server files: " + error, "error");
                                 if (callback) callback(false);
                                 return;
                             }
                             fstools.deleteRecursive(tmpFolder);
-                            var mapsFolder = serverFolder + "/maps";
-                            if (!fs.existsSync(mapsFolder)) fs.mkdirSync(mapsFolder, 0o777);
                             gameserver.writeToConsole(id, "Server update done. You can now start the server", "success");
                             if (callback) callback(true);
                         });

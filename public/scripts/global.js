@@ -79,17 +79,37 @@ function get(key) {
 /**
  * Scroll container to given position
  * @param {*} container
- * @param {number} pos
+ * @param {number|jQuery} pos
  */
 function scrollTo(container, pos) {
-    container = $(container);
-    $({"pos": container.scrollTop()}).animate({"pos": pos}, {
-        duration: 300,
-        step: function () {
-            container.scrollTop(this.pos);
-        }
-    });
-};
+    setTimeout(function () {
+        if (typeof pos != "number") pos = $(pos).offset().top;
+        container = $(container);
+        $({"pos": container.scrollTop()}).animate({"pos": pos}, {
+            duration: 300,
+            step: function () {
+                container.scrollTop(this.pos);
+            }
+        });
+    }, 50);
+}
+
+/**
+ * Get depth object value, write like foo[bar][etc]
+ * @param {object} object
+ * @param {string} key
+ * @returns {*|undefined}
+ */
+function getObjectValue(object, key) {
+    var spl = key.split("[");
+    var o = object;
+    for (var i = 0; i < spl.length; i++) {
+        var keySplit = spl[i].replace(/\]$/g, "");
+        if (typeof o[keySplit] == "undefined") return undefined;
+        o = o[keySplit];
+    }
+    return o;
+}
 
 $(function () {
     if (typeof WebSocket == "undefined") {

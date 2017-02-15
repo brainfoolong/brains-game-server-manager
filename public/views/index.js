@@ -76,13 +76,22 @@ View.script = function (message) {
         });
     });
 
+    $(".create-backup").on("click", function () {
+        Modal.confirm(t("index.backup.confirm"), function (success) {
+            if (success) {
+                View.send({"action": "createServerBackup", "id": get("id")}, function () {
+
+                });
+            }
+        });
+    });
+
     $(".log-tabs li").filter("[data-id='" + (Storage.get("index.logs.last") || "console") + "']").find("a").trigger("click");
 
     var addLogMessage = function (messageData) {
         if (messageData.type == "success" || messageData.type == "error") {
             updateServerInfo();
         }
-        console.log(messageData);
         var $message = $('<div>').addClass("line type-" + messageData.type).html('<time>' + new Date(messageData.time).toLocaleString() + '</time><div class="message text-' + messageData.type + '">' + messageData.message + '</div>');
         if (!messageData.time) $message.find("time").remove();
         $logWindow.append($message);
@@ -132,10 +141,12 @@ View.script = function (message) {
                     });
                 });
                 $(".index-server").removeClass("hidden");
-                View.send({"action": "getVersions", "id": get("id")}, function (versions) {
-                    $(".view-content").addClass(versions.installed ? "installed" : "not-installed");
-                    $(".version-installed").text(versions.installed);
-                    $(".version-available").text(versions.available);
+                View.send({"action": "getInstalledVersion", "id": get("id")}, function (version) {
+                    $(".view-content").addClass(version ? "installed" : "not-installed");
+                    $(".version-installed").text(version);
+                    View.send({"action": "getLatestVersion", "id": get("id")}, function (version) {
+                        $(".version-available").text(version);
+                    });
                 });
             }
         });

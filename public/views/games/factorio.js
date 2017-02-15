@@ -61,17 +61,18 @@ View.script = function () {
                     '</tr>');
             });
             lang.replaceInHtml(tbody);
+
+            $(".map-form").html('');
+            Form.create($(".map-form"), "factoriomaps", fields, function (formData) {
+                View.send({"action": "saveMap", "id": get("id"), "map": get("map"), "formData": formData}, function () {
+                    View.loadUrl("/index?id=" + get("id"));
+                });
+            }, maps[get("map")]);
+
+            if (get("map")) {
+                scrollTo("body", "#form-factoriomaps");
+            }
         });
     };
     loadMaps();
-    Form.create($(".map-form"), "factoriomaps", fields, function (formData) {
-        View.send({"action": "saveMap", "id": get("id"), "map": get("map"), "formData": formData}, function () {
-            loadMaps();
-        });
-    });
-    if (get("map")) {
-        setTimeout(function () {
-            scrollTo("body", $("#form-factoriomaps").offset().top);
-        }, 50);
-    }
 };

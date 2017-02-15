@@ -27,6 +27,8 @@ module.exports = function (user, frontendMessage, callback) {
         extend(true, serverData, formData);
         db.get("servers").set(id, serverData).value();
         var serverFolder = gameserver.getFolder(id);
+        if (!fs.existsSync(serverFolder + "/..")) fs.mkdirSync(serverFolder + "/..", 0o777);
+        if (!fs.existsSync(serverFolder + "/../backups")) fs.mkdirSync(serverFolder + "/../backups", 0o777);
         if (!fs.existsSync(serverFolder)) fs.mkdirSync(serverFolder, 0o777);
         games[formData.game].createConfig(id);
         callback(true);

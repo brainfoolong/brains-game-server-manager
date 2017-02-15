@@ -18,13 +18,7 @@ Form.create = function (container, formName, fields, onSubmit, values) {
     var $form = $('<form>').attr("name", formName).attr("onsubmit", "return false").attr("id", "form-" + formName);
     for (var fieldName in fields) {
         var field = fields[fieldName];
-        var fieldNameMatch = fieldName.match(/^(.*?)\[(.*?)\]/);
-        var currentValue = values[fieldName];
-        if (fieldNameMatch) {
-            if (typeof values[fieldNameMatch[1]] != "undefined") {
-                currentValue = values[fieldNameMatch[1]][fieldNameMatch[2]];
-            }
-        }
+        var currentValue = getObjectValue(values, fieldName);
         if (typeof currentValue == "undefined") currentValue = field.defaultValue;
         if (typeof currentValue == "undefined") currentValue = null;
         var $input = null;

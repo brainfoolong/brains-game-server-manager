@@ -49,21 +49,36 @@ module.exports = function (user, frontendMessage, callback) {
                 games[server.game].startServer(frontendMessage.id);
                 callback({"note": {"message": "index.start-server.scheduled", "type": "info", "delay": 20000}});
                 break;
+            case "createServerBackup":
+                var server = servers[frontendMessage.id];
+                gameserver.createServerBackup(frontendMessage.id);
+                callback({"note": {"message": "index.backup.scheduled", "type": "info", "delay": 20000}});
+                break;
+            case "loadServerBackup":
+                var server = servers[frontendMessage.id];
+                gameserver.loadServerBackup(frontendMessage.id, frontendMessage.file);
+                callback({"note": {"message": "index.backup.load.scheduled", "type": "info", "delay": 20000}});
+                break;
             case "getServerStatus":
                 var server = servers[frontendMessage.id];
-                games[server.game].getStatus(frontendMessage.id, function (status) {
-                    callback(status);
+                if (server) {
+                    games[server.game].getStatus(frontendMessage.id, function (status) {
+                        callback(status);
+                    });
+                    return;
+                }
+                callback();
+                break;
+            case "getInstalledVersion":
+                var server = servers[frontendMessage.id];
+                games[server.game].getInstalledVersion(frontendMessage.id, function (version) {
+                    callback(version);
                 });
                 break;
-            case "getVersions":
+            case "getLatestVersion":
                 var server = servers[frontendMessage.id];
-                games[server.game].getLatestVersion(frontendMessage.id, server.branch, function (stableVersion) {
-                    games[server.game].getInstalledVersion(frontendMessage.id, function (installedVersion) {
-                        callback({
-                            "available": stableVersion,
-                            "installed": installedVersion
-                        });
-                    });
+                games[server.game].getLatestVersion(frontendMessage.id, server.branch, function (version) {
+                    callback(version);
                 });
                 break;
             case "loadLog":
