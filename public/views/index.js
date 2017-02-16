@@ -50,15 +50,18 @@ View.script = function (message) {
         View.send({"action": "getBackups", "id": get("id")}, function (files) {
             $(".existing-backups").toggleClass("hidden", !files.length);
             // write to table
-            var tbody = $(".existing-backups table tbody");
-            tbody.html('');
+            var $tbody = $(".existing-backups table tbody");
+            $tbody.html('');
             $.each(files, function (id, file) {
-                tbody.append('<tr data-id="' + file.name + '"><td>' + file.name + '</td>' +
+                var $tr = $('<tr data-id="' + file.name + '"><td class="download pointer" data-tooltip="Download">' + file.name + '</td>' +
                     '<td>' + (file.size / 1024 / 1024).toFixed(2) + 'MB</td>' +
                     '<td><span class="btn btn-info btn-sm import" data-translate="index.backup.import"></span><span class="btn btn-danger btn-sm delete" data-translate="delete"></span></td>' +
                     '</tr>');
+                $tr.attr("data-id", file.name);
+                $tr.attr("data-path", file.path);
+                $tbody.append($tr);
             });
-            lang.replaceInHtml(tbody);
+            lang.replaceInHtml($tbody);
         });
     };
 
@@ -73,25 +76,116 @@ View.script = function (message) {
             folders.pop();
             parent = folders.join("/");
         }
-        $filebrowser.html('<div class="current-folder">' + folder + '</div>');
+        $filebrowser.html('<div class="current-folder" data-folder="' + folder + '">' + folder + '</div>');
+        $filebrowser.append('<div class="text-right"><select class="selectpicker">' +
+            '<option value="" data-translate="index.filebrowser.action"></option>' +
+            '<option value="createfile" data-translate="index.filebrowser.createfile"></option>' +
+            '<option value="createdir" data-translate="index.filebrowser.createdir"></option>' +
+            '<option value="uploadfile" data-translate="index.filebrowser.uploadfile"></option>' +
+            '<option value="uploadarchive" data-translate="index.filebrowser.uploadarchive"></option>' +
+            '</select></div>');
+        lang.replaceInHtml($filebrowser);
+        $filebrowser.find(".selectpicker").selectpicker().on("change", function () {
+            var v = this.value;
+            $(this).selectpicker("val", "");
+            switch (v) {
+                case "uploadfile":
+                case "uploadarchive":
+                    var $html = $('<div>');
+                    var fileData = "";
+                    var fileName = "";
+                    $html.append($('<input type="file" class="form-control">').attr("placeholder", t("index.filebrowser.upload.placeholder")));
+                    $html.append('<div class="file"></div>');
+                    $html.find("input").on("change", function (ev) {
+                        var files = ev.target.files;
+                        for (var i = 0, f; f = files[i]; i++) {
+                            var reader = new FileReader();
+                            reader.onload = (function (theFile) {
+                                return function (e) {
+                                    $html.find(".file").append(theFile.name + " | " + theFile.size + " bytes");
+                                    fileName = theFile.name;
+                                    fileData = e.target.result;
+                                };
+                            })(f);
+                            reader.readAsBinaryString(f);
+                        }
+                    });
+                    Modal.confirm($html, function (success) {
+                        if (success && fileName.length) {
+                            note("index.filebrowser.upload.progress");
+                            setTimeout(function () {
+                                View.send({
+                                    "action": "uploadFile",
+                                    "id": get("id"),
+                                    "folder": folder,
+                                    "file": fileName,
+                                    "data": btoa(fileData),
+                                    "isArchive": v == "uploadarchive"
+                                }, function (success) {
+                                    loadFilebrowser(folder);
+                                });
+                            }, 500);
+                        }
+                    });
+                    break;
+                case "createfile":
+                case "createdir":
+                    Modal.prompt("", t("index.filebrowser.create.placeholder"), function (name) {
+                        if (name !== false && name.length) {
+                            View.send({
+                                "action": "createFileDir",
+                                "id": get("id"),
+                                "folder": folder,
+                                "file": name,
+                                "isDirectory": v == "createdir"
+                            }, function (success) {
+                                if (success) {
+                                    loadFilebrowser(folder);
+                                } else {
+                                    note("index.filebrowser.create.error", "error");
+                                }
+                            });
+                        }
+                    });
+                    break;
+            }
+        });
         if (folder) {
-            $filebrowser.append('<div class="parent-folder select-folder entry" data-path="' + parent + '">' + t("index.filebrowser.parent") + '</div>');
+            $filebrowser.append('<div class="parent-folder select-folder entry" data-relative-path="' + parent + '">' + t("index.filebrowser.parent") + '</div>');
         }
         View.send({"action": "getFilelist", "id": get("id"), "folder": folder}, function (files) {
             for (var i = 0; i < files.length; i++) {
                 var file = files[i];
                 var path = folder + "/" + file.name;
-                $filebrowser.append('<div class="entry ' + (file.isDirectory ? "select-folder folder" : "select-file file") + '" data-path="' + path + '" data-folder="' + folder + '"><div class="name">' + file.name + '</div><div class="size">' + (file.size / 1024).toFixed(2) + ' kB | ' + new Date(file.mtime).toLocaleString() + '</div></div>');
+                var $entry = $('<div class="entry"><div class="name"></div><div class="size"></div></div>');
+                $entry.attr("data-relative-path", path);
+                $entry.attr("data-path", file.path);
+                $entry.attr("data-folder", folder);
+                $entry.attr("data-name", file.name);
+                $entry.addClass((file.isDirectory ? "select-folder folder" : "select-file file"));
+                $entry.find(".name").text(file.name);
+                $entry.find(".size").text((file.size / 1024).toFixed(2) + ' kB | ' + new Date(file.mtime).toLocaleString());
+                $entry.append('<div class="icons"><span class="glyphicon glyphicon-download" data-translate-property="data-tooltip,index.filebrowser.download"></span><span class="glyphicon glyphicon-remove-circle" data-translate-property="data-tooltip,index.filebrowser.remove"></span></div>');
+                $filebrowser.append($entry);
+            }
+            lang.replaceInHtml($filebrowser);
+        });
+    };
+
+    var downloadFile = function (path, filename) {
+        View.send({"action": "downloadFile", "id": get("id"), "file": path}, function (success) {
+            if (success === true) {
+                window.open("/download-file/" + filename);
             }
         });
     };
 
     $filebrowser.on("click", ".select-folder", function () {
-        loadFilebrowser($(this).attr("data-path"));
+        loadFilebrowser($(this).attr("data-relative-path"));
     }).on("click", ".select-file", function () {
         var $textarea = $('<textarea class="autoheight form-control">');
         $textarea.val('loading...');
-        var file = $(this).attr("data-path");
+        var file = $(this).attr("data-relative-path");
         var folder = $(this).attr("data-folder");
         Modal.confirm($textarea, function (success) {
             if (success) {
@@ -102,9 +196,24 @@ View.script = function (message) {
         });
         View.send({"action": "loadFile", "id": get("id"), "file": file}, function (fileData) {
             $textarea.val(fileData);
+            $("#confirm .modal-title").text(file);
             setTimeout(function () {
                 textareaAutoheight($("#confirm"));
             }, 500);
+        });
+    }).on("click", ".glyphicon-download", function (ev) {
+        ev.stopPropagation();
+        var $entry = $(this).closest(".entry");
+        downloadFile($entry.attr("data-path"), $entry.attr("data-name"));
+    }).on("click", ".glyphicon-remove-circle", function (ev) {
+        ev.stopPropagation();
+        var $entry = $(this).closest(".entry");
+        Modal.confirm(t("sure"), function (success) {
+            if (success) {
+                View.send({"action": "deleteFile", "id": get("id"), "file": $entry.attr("data-path")}, function () {
+                    loadFilebrowser($entry.attr("data-folder"));
+                });
+            }
         });
     });
 
@@ -196,6 +305,9 @@ View.script = function (message) {
                 });
             }
         });
+    }).on("click", ".download", function () {
+        var $tr = $(this).closest("tr");
+        downloadFile($tr.attr("data-path"), $tr.attr("data-id"));
     });
 
     $(".pipe-command").on("keyup", function (ev) {

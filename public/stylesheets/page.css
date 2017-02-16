@@ -607,6 +607,7 @@ form {
     padding-left: 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     margin-bottom: 1px;
+    padding-right: 100px;
 }
 
 .filebrowser .entry:hover {
@@ -663,7 +664,26 @@ form {
     color: white;
 }
 
-.current-folder {
+.filebrowser .icons {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    font-size: 120%;
+}
+
+.filebrowser .icons span{
+    margin-right: 5px;
+}
+
+.filebrowser .entry.folder .glyphicon-download {
+    display: none;
+}
+
+.filebrowser .current-folder {
     font-weight: bold;
     margin-bottom: 10px;
+}
+
+.pointer{
+    cursor: pointer;
 }

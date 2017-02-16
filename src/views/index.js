@@ -5,6 +5,8 @@ var db = require(__dirname + "/../db");
 var gameserver = require(__dirname + "/../gameserver");
 var fstools = require(__dirname + "/../fstools");
 var WebSocketUser = require(__dirname + "/../websocketuser");
+var exec = require('child_process').exec;
+const path = require('path');
 
 /**
  * The view
@@ -100,7 +102,7 @@ module.exports = function (user, frontendMessage, callback) {
                 break;
             case "saveFile":
                 var file = serverFolder + frontendMessage.file;
-                fs.writeFileSync(file, frontendMessage.data, {"mode" : 0o777});
+                fs.writeFileSync(file, frontendMessage.data, {"mode": 0o777});
                 callback({"note": {"message": "index.filebrowser.saved", "type": "success"}});
                 break;
             case "loadFile":
@@ -110,6 +112,65 @@ module.exports = function (user, frontendMessage, callback) {
                     return;
                 }
                 callback("");
+                break;
+            case "createFileDir":
+                var filePath = serverFolder + frontendMessage.folder + "/" + frontendMessage.file;
+                if (!fs.existsSync(filePath)) {
+                    if (frontendMessage.isDirectory) {
+                        fs.mkdirSync(filePath, {"mode": 0o777});
+                    } else {
+                        fs.writeFileSync(filePath, "", {"mode": 0o777});
+                    }
+                    callback(true);
+                    return;
+                }
+                callback(false);
+                break;
+            case "uploadFile":
+                var rootFolder = serverFolder + frontendMessage.folder;
+                var filePath = rootFolder + "/" + frontendMessage.file;
+                fs.writeFileSync(filePath, new Buffer(frontendMessage.data, "base64"), {"mode": 0o777});
+                if (frontendMessage.isArchive) {
+                    var settings = db.get("settings").value();
+                    var cmd = null;
+                    if (frontendMessage.file.match(/\.tar$/i)) {
+                        cmd = settings.tar + " -xf '" + frontendMessage.file + "'";
+                    } else if (frontendMessage.file.match(/\.zip$/i)) {
+                        cmd = settings.unzip + " '" + frontendMessage.file + "'";
+                    }
+                    if (cmd) {
+                        exec("cd '" + rootFolder + "' && " + cmd + " && rm '" + filePath + "' && chmod 0777 -R '" + rootFolder + "' && ls -l '" + rootFolder + "'", function () {
+                            callback(true);
+                        });
+                    } else {
+                        callback(true);
+                    }
+                    return;
+                }
+                callback(false);
+                break;
+            case "deleteFile":
+                var filePath = path.resolve(frontendMessage.file);
+                if (fs.existsSync(filePath)) {
+                    var stat = fs.statSync(filePath);
+                    if (stat.isDirectory()) {
+                        fstools.deleteRecursive(filePath);
+                    } else {
+                        fs.unlinkSync(filePath);
+                    }
+                    callback(true);
+                    return;
+                }
+                callback(false);
+                break;
+            case "downloadFile":
+                var filePath = path.resolve(frontendMessage.file);
+                if (fs.existsSync(filePath)) {
+                    require(__dirname + "/../routes").file = filePath;
+                    callback(true);
+                    return;
+                }
+                callback(false);
                 break;
             case "getFilelist":
                 var folder = serverFolder + frontendMessage.folder;
@@ -121,6 +182,7 @@ module.exports = function (user, frontendMessage, callback) {
                         var stat = fs.statSync(folder + "/" + file);
                         if (!stat.isDirectory()) continue;
                         arr.push({
+                            "path": path.resolve(folder + "/" + file),
                             "name": file,
                             "size": stat.size,
                             "isDirectory": stat.isDirectory(),
@@ -132,6 +194,7 @@ module.exports = function (user, frontendMessage, callback) {
                         var stat = fs.statSync(folder + "/" + file);
                         if (stat.isDirectory()) continue;
                         arr.push({
+                            "path": path.resolve(folder + "/" + file),
                             "name": file,
                             "size": stat.size,
                             "isDirectory": stat.isDirectory(),
@@ -147,16 +210,16 @@ module.exports = function (user, frontendMessage, callback) {
                 for (var i = 0; i < files.length; i++) {
                     var file = files[i];
                     var stat = fs.statSync(serverFolder + "/../backups/" + file);
-                    arr.push({"name": file, "size": stat.size});
+                    arr.push({"name": file, "size": stat.size, "path": serverFolder + "/../backups/" + file});
                 }
                 callback(arr);
                 break;
             case "loadLog":
-                var path = serverFolder + "/" + frontendMessage.file + ".log";
-                if (fs.existsSync(path)) {
-                    callback(fs.readFileSync(path).toString());
+                var filePath = serverFolder + "/" + frontendMessage.file + ".log";
+                if (fs.existsSync(filePath)) {
+                    callback(fs.readFileSync(filePath).toString());
                     if (frontendMessage.file != "console") {
-                        fstools.tailFile(path, function (data) {
+                        fstools.tailFile(filePath, function (data) {
                             for (var j = 0; j < WebSocketUser.instances.length; j++) {
                                 var user = WebSocketUser.instances[j];
                                 user.send(frontendMessage.file + "-tail", {

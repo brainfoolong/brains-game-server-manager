@@ -27,6 +27,7 @@ Modal.alert = function (message, callback) {
  */
 Modal.confirm = function (message, callback) {
     var e = $("#confirm");
+    e.find(".modal-title").text(t("modal.title.confirm"));
     e.modal().one("hidden.bs.modal", function () {
             if (callback) callback(false);
         }
