@@ -131,25 +131,42 @@ factorio.createMap = function (id, map, mapData, callback) {
  * Delete map files
  * @param {string} id
  * @param {string} map
+ * @todo deletemap implementation
  */
 factorio.deleteMap = function (id, map) {
 
 };
 
 /**
- * Check all requirements to be able to install factorio
- * Return the string of missing application if any requirement no exist
- * @return {string|boolean}
+ * Check all requirements to be able to install and use factorio
+ * Return note object if anything gone wrong
+ * @param {string} id
+ * @return {object|boolean}
  */
-factorio.checkRequirements = function () {
+factorio.checkRequirements = function (id) {
+    var server = db.get("servers").get(id).value();
     var settings = db.get("settings").value();
+    var note = null;
+    var noteParams = null;
     if (!settings.tar) {
-        return "tar"
+        note = "missing.requirements";
+        noteParams = {"app": "tar"};
     }
     if (!settings.unzip) {
-        return "unzip"
+        note = "missing.requirements";
+        noteParams = {"app": "unzip"};
     }
-    return true;
+    if(!server.factorio.map){
+        note = "index.factorio.missing.map";
+    }
+    if(!note){
+        return true;
+    }
+    return {
+        "message": [note, noteParams],
+        "type": "danger",
+        "delay": 20000
+    };
 };
 
 /**
@@ -245,7 +262,7 @@ factorio.updateServer = function (id, callback) {
                     gameserver.writeToConsole(id, "console.factorio.updateServer.4");
                     exec("cd " + tmpFolder + " && " + settings.tar + " xfv " + packageFile, null, function (error) {
                         if (error) {
-                            gameserver.writeToConsole(id, ["console.factorio.updateServer.error.1", {"error": error}], "error");
+                            gameserver.writeToConsole(id, ["console.factorio.updateServer.error.1", {"error": JSON.stringify(error)}], "error");
                             if (callback) callback(false);
                             return;
                         }
@@ -253,7 +270,7 @@ factorio.updateServer = function (id, callback) {
                         if (!fs.existsSync(factorioFolder)) fs.mkdirSync(factorioFolder, 0o777);
                         exec("cd " + tmpFolder + "/factorio && cp -Rf * " + factorioFolder + " && chmod -R 0777 " + factorioFolder, null, function (error) {
                             if (error) {
-                                gameserver.writeToConsole(id, ["console.factorio.updateServer.error.2", {"error": error}], "error");
+                                gameserver.writeToConsole(id, ["console.factorio.updateServer.error.2", {"error": JSON.stringify(error)}], "error");
                                 if (callback) callback(false);
                                 return;
                             }
@@ -330,7 +347,7 @@ factorio.getInstalledVersion = function (id, callback) {
     gameserver.writeToConsole(id, "console.getInstalledVersion.1");
     factorio.exec(id, "--version", function (error, stdout) {
         if (error) {
-            gameserver.writeToConsole(id, ["console.getInstalledVersion.error.1", {"error": error}], "error");
+            gameserver.writeToConsole(id, ["console.getInstalledVersion.error.1", {"error": JSON.stringify(error)}], "error");
             callback(null);
             return;
         }

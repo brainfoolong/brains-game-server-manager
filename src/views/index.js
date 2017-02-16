@@ -23,6 +23,7 @@ module.exports = function (user, frontendMessage, callback) {
     var game = null;
     var server = null;
     var serverFolder = null;
+    var requirementsCheck = null;
     if (frontendMessage) {
         if (frontendMessage.id) {
             if (!servers[frontendMessage.id]) {
@@ -32,27 +33,35 @@ module.exports = function (user, frontendMessage, callback) {
             server = servers[frontendMessage.id];
             serverFolder = gameserver.getFolder(frontendMessage.id);
             game = gameserver.getGame(server.game);
+            requirementsCheck = game.checkRequirements(frontendMessage.id);
         }
         switch (frontendMessage.action) {
             case "updateServer":
-                var check = game.checkRequirements()
-                if (check === true) {
+                if (requirementsCheck === true) {
                     game.updateServer(frontendMessage.id, function (success) {
                         callback(success);
                     });
                 } else {
-                    callback({
-                        "note": {
-                            "message": ["missing.requirements", {"app": check}],
-                            "type": "danger",
-                            "delay": 20000
-                        }
-                    });
+                    callback({"note": requirementsCheck});
                 }
                 break;
             case "stopServer":
-                game.stopServer(frontendMessage.id);
-                callback({"note": {"message": "index.stop-server.scheduled", "type": "info", "delay": 20000}});
+                if (requirementsCheck === true) {
+                    gameserver.stopServer(frontendMessage.id, function (success) {
+                        callback(success);
+                    });
+                } else {
+                    callback({"note": requirementsCheck});
+                }
+                break;
+            case "startServer":
+                if (requirementsCheck === true) {
+                    gameserver.startServer(frontendMessage.id, function (success) {
+                        callback(success);
+                    });
+                } else {
+                    callback({"note": requirementsCheck});
+                }
                 break;
             case "pipeCommand":
                 if (typeof game.pipeCommand == "function") {
@@ -67,10 +76,6 @@ module.exports = function (user, frontendMessage, callback) {
                     return;
                 }
                 callback({"note": {"message": "index.pipeCommand.notavailable", "type": "danger"}});
-                break;
-            case "startServer":
-                game.startServer(frontendMessage.id);
-                callback({"note": {"message": "index.start-server.scheduled", "type": "info", "delay": 20000}});
                 break;
             case "createServerBackup":
                 game.createServerBackup(frontendMessage.id);

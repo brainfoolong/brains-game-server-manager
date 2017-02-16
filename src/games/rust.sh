@@ -16,7 +16,6 @@ case "$1" in
 			else
 				echo "$PIDFILE found, but no server running. Possibly your previously started server crashed"
 				rm $PIDFILE
-				rm $FIFOFILE
 			fi
 		fi
 		if [ "${UID}" = "0" ]; then
@@ -35,16 +34,16 @@ case "$1" in
 		if [ -e $PIDFILE ]; then
 		    rm $PIDFILE
 		fi
-		echo "Starting $LABEL... "
 		mkfifo $FIFOFILE
-		$BASEDIR/server/bin/x64/factorio --port {_port_} --start-server $BASEDIR/maps/{_map_}.zip --server-settings $BASEDIR/server-settings.json > $BASEDIR/output.log 2> $BASEDIR/error.log < $FIFOFILE &
+		echo "Starting $LABEL... "
+		$BASEDIR/RustDedicated -batchmode +server.ip 0.0.0.0  +server.port {_port_} +rcon.web {_rconweb_} +rcon.ip 0.0.0.0 +rcon.port {_rconport_} +rcon.password "{_rconpassword_}" +server.identity "{_id_}" +server.level "Procedural Map" > $BASEDIR/output.log 2> $BASEDIR/error.log < $BASEDIR/server.fifo &
 		PID=$!
 		ps -p ${PID} > /dev/null 2>&1
 		if [ "$?" -ne "0" ]; then
 			echo "$LABEL could not start"
 		else
 			echo $PID > $PIDFILE
-			echo "$LABEL started"
+			echo "$LABEL booting now. See logs for details."
 		fi
 	;;
 	stop)
@@ -66,10 +65,9 @@ case "$1" in
 				echo "Server is not shutting down cleanly - killing"
 				kill -KILL $(cat $PIDFILE)
 			else
-				echo "Done"
+				echo "Stopped"
 			fi
 			rm $PIDFILE
-			rm $FIFOFILE
 		else
 			echo "Server stopped"
 			exit 0

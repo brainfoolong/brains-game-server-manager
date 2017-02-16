@@ -49,7 +49,25 @@ View.script = function (message) {
         "factorio[autosave_slots]": {"type": "number", "attributes": {"game-field": "1"}, "defaultValue": 5},
         "factorio[afk_autokick_interval]": {"type": "number", "attributes": {"game-field": "1"}, "defaultValue": 0},
         "factorio[auto_pause]": {"type": "switch", "attributes": {"game-field": "1"}, "defaultValue": true},
-        "factorio[autosave_only_on_server]": {"type": "switch", "attributes": {"game-field": "1"}, "defaultValue": true}
+        "factorio[autosave_only_on_server]": {"type": "switch", "attributes": {"game-field": "1"}, "defaultValue": true},
+        "rust[branch]": {"type": "select", "values" : ["stable", "prerelease"], "attributes": {"game-field": "1", "required" : "1"}, "defaultValue": "public"},
+        "rust[port]": {"type": "number", "attributes": {"game-field": "1", "required" : "1"}, "defaultValue": 28015},
+        "rust[rcon_port]": {"type": "number", "attributes": {"game-field": "1", "required" : "1"}, "defaultValue": 28016},
+        "rust[rcon_password]": {"type": "text", "attributes": {"game-field": "1", "required" : "1"}},
+        "rust[rcon_web]": {"type": "switch", "attributes": {"game-field": "1"}, "defaultValue": true},
+        "rust[id]": {"type": "text", "attributes": {"game-field": "1", "required" : "1"}},
+        /*"rust[maxplayers]": {"type": "number", "attributes": {"game-field": "1", "required" : "1"}, "defaultValue": 100},
+        "rust[hostname]": {"type": "number", "attributes": {"game-field": "1", "required" : "1"}},
+        "rust[description]": {"type": "number", "attributes": {"game-field": "1", "required" : "1"}},
+        "rust[headerimage]": {"type": "number", "attributes": {"game-field": "1", "required" : "1"}},
+        "rust[url]": {"type": "number", "attributes": {"game-field": "1", "required" : "1"}},
+        "rust[mapid]": {"type": "number", "attributes": {"game-field": "1", "required" : "1"}},
+        "rust[seed]": {"type": "number", "attributes": {"game-field": "1", "required" : "1"}, "defaultValue": Math.random() * 100000},
+        "rust[worldsize]": {"type": "number", "attributes": {"game-field": "1", "required" : "1"}, "defaultValue": 3500},
+        "rust[saveinterval]": {"type": "number", "attributes": {"game-field": "1", "required" : "1"}, "defaultValue": 300},
+        "rust[globalchat]": {"type": "switch", "attributes": {"game-field": "1"}, "defaultValue": true},
+        "rust[secure]": {"type": "switch", "attributes": {"game-field": "1", "required" : "1"}, "defaultValue": true},
+        "rust[stability]": {"type": "switch", "attributes": {"game-field": "1", "required" : "1"}, "defaultValue": true}*/
     };
     Form.create($form, "servers", fields, function (formData) {
         View.send({"action": "save", "formData": formData, "id" : get("id")}, function (message) {

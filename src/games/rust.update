@@ -1,0 +1,6 @@
+@ShutdownOnFailedCommand 1
+@NoPromptForPassword 1
+login anonymous
+force_install_dir {_folder_}
+app_update {_app_} validate
+quit

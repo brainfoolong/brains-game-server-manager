@@ -233,6 +233,7 @@ View.script = function (message) {
     $(".btn.start-server").on("click", function () {
         Modal.confirm(t("index.start-server.confirm"), function (success) {
             if (success) {
+                note("index.start-server.scheduled", "info", 20000);
                 View.send({"action": "startServer", "id": get("id")}, function () {
 
                 });
@@ -243,6 +244,7 @@ View.script = function (message) {
     $(".btn.stop-server").on("click", function () {
         Modal.confirm(t("index.stop-server.confirm"), function (success) {
             if (success) {
+                note("index.stop-server.scheduled", "info", 20000);
                 View.send({"action": "stopServer", "id": get("id")}, function () {
 
                 });
