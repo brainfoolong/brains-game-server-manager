@@ -63,22 +63,17 @@ module.exports = function (user, frontendMessage, callback) {
                     callback({"note": requirementsCheck});
                 }
                 break;
-            case "pipeCommand":
-                if (typeof game.pipeCommand == "function") {
-                    game.getStatus(frontendMessage.id, function (status) {
-                        if (status.status == "running") {
-                            callback({"note": {"message": "index.pipeCommand.sent", "type": "info"}});
-                            return;
-                        }
-                        callback({"note": {"message": "index.pipeCommand.notrunning", "type": "danger"}});
-                    });
-                    game.pipeCommand(frontendMessage.id, frontendMessage.command);
-                    return;
-                }
-                callback({"note": {"message": "index.pipeCommand.notavailable", "type": "danger"}});
+            case "pipeStdin":
+                gameserver.pipeStdin(frontendMessage.id, frontendMessage.command, function (success) {
+                    if (success) {
+                        callback({"note": {"message": "index.pipeStdin.sent", "type": "info"}});
+                    } else {
+                        callback({"note": {"message": "index.pipeStdin.notrunning", "type": "danger"}});
+                    }
+                });
                 break;
             case "createServerBackup":
-                game.createServerBackup(frontendMessage.id);
+                gameserver.createServerBackup(frontendMessage.id);
                 callback({"note": {"message": "index.backup.scheduled", "type": "info", "delay": 20000}});
                 break;
             case "loadServerBackup":
@@ -91,7 +86,7 @@ module.exports = function (user, frontendMessage, callback) {
                 callback({"note": {"message": "index.backup.deleted", "type": "success", "delay": 20000}});
                 break;
             case "getServerStatus":
-                game.getStatus(frontendMessage.id, function (status) {
+                gameserver.getStatus(frontendMessage.id, function (status) {
                     callback(status);
                 });
                 break;
@@ -222,7 +217,10 @@ module.exports = function (user, frontendMessage, callback) {
             case "loadLog":
                 var filePath = serverFolder + "/" + frontendMessage.file + ".log";
                 if (fs.existsSync(filePath)) {
-                    callback(fs.readFileSync(filePath).toString());
+                    callback({
+                        "log" : fs.readFileSync(filePath).toString(),
+                        "time" : fs.statSync(filePath).mtime
+                    });
                     if (frontendMessage.file != "console") {
                         fstools.tailFile(filePath, function (data) {
                             for (var j = 0; j < WebSocketUser.instances.length; j++) {

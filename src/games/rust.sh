@@ -44,6 +44,7 @@ case "$1" in
 		else
 			echo $PID > $PIDFILE
 			echo "$LABEL booting now. See logs for details."
+		    echo -n "." > $FIFOFILE
 		fi
 	;;
 	stop)

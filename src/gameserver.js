@@ -55,7 +55,7 @@ gameserver.createServerBackup = function (id, callback) {
     var backupFile = backupsFolder + "/" + new Date().toISOString() + ".tar";
     var settings = db.get("settings").value();
     gameserver.writeToConsole(id, ["console.backup.create.1", {"file": backupFile}], "info");
-    exec("cd " + serverFolder + " && " + settings.tar + " -zcf '" + backupFile + "' .", null, function (error) {
+    exec("cd " + serverFolder + " && " + settings.tar + " -cf '" + backupFile + "' .", null, function (error) {
         if (error) {
             gameserver.writeToConsole(id, ["console.backup.create.error.1", {"error": JSON.stringify(error)}], "error");
             if (callback) callback(false);
@@ -64,6 +64,15 @@ gameserver.createServerBackup = function (id, callback) {
         gameserver.writeToConsole(id, "console.backup.create.success.1", "success");
         if (callback) callback(true);
     });
+};
+
+/**
+ * Get saved data to the given server
+ * @type {string} id
+ * @returns {object|null}
+ */
+gameserver.getData = function (id) {
+    return db.get("servers").get(id).cloneDeep().value() || null;
 };
 
 /**
@@ -127,6 +136,38 @@ gameserver.stopServer = function (id, callback) {
     exec(bin + " stop", function (error, stdout) {
         gameserver.writeToConsole(id, ["console.stopServer.success.1", {"msg": stdout}], "success");
         if (callback) callback(true);
+    });
+};
+
+/**
+ * Pipe a command via stdin to the server
+ * @param {string} id
+ * @param {string} command
+ * @param {function=} callback
+ */
+gameserver.pipeStdin = function (id, command, callback) {
+    gameserver.getStatus(id, function (status) {
+        var fifoFile = gameserver.getFolder(id) + "/server.fifo";
+        if (status.status == "running" && fs.existsSync(fifoFile)) {
+            fs.appendFileSync(fifoFile, command);
+            if (callback) callback(true);
+            return;
+        }
+        if (callback) callback(false);
+    });
+};
+
+
+/**
+ * Get status for given server, will return 'running' or 'stopped'
+ * @param {string} id
+ * @param {function} callback
+ */
+gameserver.getStatus = function (id, callback) {
+    exec(gameserver.getFolder(id) + "/server.sh status", function (error, stdout) {
+        callback({
+            "status": stdout.trim()
+        });
     });
 };
 

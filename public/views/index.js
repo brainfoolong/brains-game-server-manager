@@ -25,10 +25,6 @@ View.script = function (message) {
         if ($autoscroll.val() == "true") {
             scrollTo($logWindow, 999999999);
         }
-        if (fromTail && (messageData.type == "success" || messageData.type == "error")) {
-            updateServerStatus();
-            updateBackups();
-        }
     };
 
     /**
@@ -260,10 +256,10 @@ View.script = function (message) {
         Storage.set("index.logs.last", $li.attr("data-id"));
         $logWindow.html(t("loading"));
 
-        View.send({"action": "loadLog", "id": get("id"), "file": $li.attr("data-id")}, function (fileData) {
+        View.send({"action": "loadLog", "id": get("id"), "file": $li.attr("data-id")}, function (data) {
             $logWindow.html('');
-            if (fileData) {
-                var lines = fileData.split("\n");
+            if (data) {
+                var lines = data.log.split("\n");
                 if (lines.length) {
                     for (var i = 0; i < lines.length; i++) {
                         var line = lines[i];
@@ -316,7 +312,7 @@ View.script = function (message) {
         if (ev.keyCode == 13) {
             var cmd = this.value;
             this.value = "";
-            View.send({"action": "pipeCommand", "id": get("id"), "command": cmd}, function () {
+            View.send({"action": "pipeStdin", "id": get("id"), "command": cmd}, function () {
 
             });
         }
@@ -343,8 +339,14 @@ View.script = function (message) {
         Interval.create("index.serverinfo", updateServerStatus, 10000);
         updateServerStatus();
         Socket.onMessage("console-tail", function (action, message) {
-            if (action == "console-tail" && message.server == get("id") && $(".log-tabs .active").attr("data-id") == "console") {
-                addLogMessage(message.data, true);
+            if (action == "console-tail" && message.server == get("id")) {
+                if (message.data.type == "success" || message.data.type == "error") {
+                    updateServerStatus();
+                    updateBackups();
+                }
+                if ($(".log-tabs .active").attr("data-id") == "console") {
+                    addLogMessage(message.data, true);
+                }
             }
         });
         Socket.onMessage("output-tail", function (action, message) {

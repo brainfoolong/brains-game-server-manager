@@ -79,20 +79,6 @@ factorio.onCustomFrontendMessage = function (serverId, message, callback) {
 };
 
 /**
- * Get status for given server, will return 'running' or 'stopped'
- * @param {string} id
- * @param {function} callback
- */
-factorio.getStatus = function (id, callback) {
-    exec(gameserver.getFolder(id) + "/server.sh status", function (error, stdout) {
-        var status = {
-            "status": stdout.trim()
-        };
-        callback(status);
-    });
-};
-
-/**
  * Execute a server command
  * @param {string} id
  * @param {string} cmd
@@ -201,39 +187,6 @@ factorio.createConfig = function (id) {
         }
     }
     fs.writeFile(serverFolder + "/server.sh", templateData, {"mode": 0o777});
-};
-
-/**
- * Start server
- * @param {string} id
- * @param {function=} callback
- */
-factorio.startServer = function (id, callback) {
-    var server = db.get("servers").get(id).value();
-    gameserver.writeToConsole(id, "console.startServer.1", "info");
-    if (!server.factorio.map) {
-        gameserver.writeToConsole(id, "console.startServer.error.1", "error");
-        return;
-    }
-    var bin = gameserver.getFolder(id) + "/server.sh";
-    exec(bin + " start", function (error, stdout) {
-        gameserver.writeToConsole(id, ["console.startServer.success.1", {"msg": stdout}], "success");
-        if (callback) callback(true);
-    });
-};
-
-/**
- * Stop server
- * @param {string} id
- * @param {function=} callback
- */
-factorio.stopServer = function (id, callback) {
-    var bin = gameserver.getFolder(id) + "/server.sh";
-    gameserver.writeToConsole(id, "console.stopServer.1", "info");
-    exec(bin + " stop", function (error, stdout) {
-        gameserver.writeToConsole(id, ["console.stopServer.success.1", {"msg": stdout}], "success");
-        if (callback) callback(true);
-    });
 };
 
 /**

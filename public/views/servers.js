@@ -50,7 +50,7 @@ View.script = function (message) {
         "factorio[afk_autokick_interval]": {"type": "number", "attributes": {"game-field": "1"}, "defaultValue": 0},
         "factorio[auto_pause]": {"type": "switch", "attributes": {"game-field": "1"}, "defaultValue": true},
         "factorio[autosave_only_on_server]": {"type": "switch", "attributes": {"game-field": "1"}, "defaultValue": true},
-        "rust[branch]": {"type": "select", "values" : ["stable", "prerelease"], "attributes": {"game-field": "1", "required" : "1"}, "defaultValue": "public"},
+        "rust[branch]": {"type": "select", "values" : ["public", "prerelease"], "attributes": {"game-field": "1", "required" : "1"}, "defaultValue": "public"},
         "rust[port]": {"type": "number", "attributes": {"game-field": "1", "required" : "1"}, "defaultValue": 28015},
         "rust[rcon_port]": {"type": "number", "attributes": {"game-field": "1", "required" : "1"}, "defaultValue": 28016},
         "rust[rcon_password]": {"type": "text", "attributes": {"game-field": "1", "required" : "1"}},

@@ -1,0 +1,6 @@
+@ShutdownOnFailedCommand 1
+@NoPromptForPassword 1
+login anonymous
+app_info_update 1
+app_info_print {_app_}
+quit

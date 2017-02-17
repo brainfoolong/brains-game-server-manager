@@ -4,6 +4,7 @@
 LABEL=Factorio
 BASEDIR=$(dirname "$0")
 PIDFILE="$BASEDIR/server.pid"
+FIFOFILE="$BASEDIR/server.fifo"
 cd "${BASEDIR}"
 
 case "$1" in
@@ -27,11 +28,15 @@ case "$1" in
 			done
 			echo "!"
 		fi
+		if [ -e $FIFOFILE ]; then
+		    rm $FIFOFILE
+		fi
 		if [ -e $PIDFILE ]; then
 		    rm $PIDFILE
 		fi
+		mkfifo $FIFOFILE
 		echo "Starting $LABEL... "
-		$BASEDIR/factorio/bin/x64/factorio --port {_port_} --start-server $BASEDIR/maps/{_map_}.zip --server-settings $BASEDIR/server-settings-generated.json > $BASEDIR/output.log 2> $BASEDIR/error.log &
+		$BASEDIR/factorio/bin/x64/factorio --port {_port_} --start-server $BASEDIR/maps/{_map_}.zip --server-settings $BASEDIR/server-settings-generated.json > $BASEDIR/output.log 2> $BASEDIR/error.log < $BASEDIR/server.fifo &
 		PID=$!
 		ps -p ${PID} > /dev/null 2>&1
 		if [ "$?" -ne "0" ]; then
@@ -39,6 +44,7 @@ case "$1" in
 		else
 			echo $PID > $PIDFILE
 			echo "$LABEL booting now. See logs for details."
+		    echo -n "." > $FIFOFILE
 		fi
 	;;
 	stop)
