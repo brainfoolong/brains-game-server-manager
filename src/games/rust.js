@@ -7,7 +7,6 @@ var fs = require("fs");
 var fstools = require(__dirname + "/../fstools");
 var gameserver = require(__dirname + "/../gameserver");
 var cache = require(__dirname + "/../cache");
-var compareVersions = require('compare-versions');
 
 /**
  * Rust
@@ -98,15 +97,30 @@ rust.createConfig = function (id) {
     template = __dirname + "/rust.sh";
     templateData = fs.readFileSync(template).toString();
     params = {
-        "port": serverData.rust.port,
-        "rconweb": serverData.rust.rcon_web ? 1 : 0,
-        "rconport": serverData.rust.rcon_port,
-        "rconpassword": serverData.rust.rcon_password,
-        "id": serverData.rust.id
+        "server.port": serverData.rust.port,
+        "server.ip": serverData.rust.ip,
+        "rcon.web": serverData.rust.rcon_web ? 1 : 0,
+        "rcon.ip": serverData.rust.rcon_ip,
+        "rcon.port": serverData.rust.rcon_port,
+        "rcon.password": serverData.rust.rcon_password,
+        "server.identity": '"' + serverData.rust.id + '"',
+        "server.maxplayers": serverData.rust.maxplayers,
+        "server.hostname": '"' + serverData.rust.hostname + '"',
+        "server.description": '"' + serverData.rust.description.replace(/\n/g, "\\n") + '"',
+        "server.headerimage": serverData.rust.headerimage,
+        "server.url": serverData.rust.url,
+        "server.seed": serverData.rust.seed,
+        "server.worldsize": serverData.rust.worldsize,
+        "server.saveinterval": serverData.rust.saveinterval,
+        "server.globalchat": serverData.rust.globalchat ? 1 : 0,
+        "server.secure": serverData.rust.secure ? 1 : 0,
+        "server.stability": serverData.rust.stability ? 1 : 0
     };
+    var paramsStr = "";
     for (var i in params) {
-        templateData = templateData.replace(new RegExp("{_" + i + "_}", "i"), params[i]);
+        paramsStr += "+" + i + " " + params[i] + " ";
     }
+    templateData = templateData.replace(new RegExp("{_params_}", "i"), paramsStr);
     fs.writeFile(serverFolder + "/server.sh", templateData, {"mode": 0o777});
 };
 

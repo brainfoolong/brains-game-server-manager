@@ -8,6 +8,11 @@ html {
     height: 100%;
 }
 
+p {
+    padding-bottom: 25px;
+    color: #b1b1b1;
+}
+
 a, a:hover, a:active,
 .navbar-inverse .btn-link:hover, .navbar-inverse .btn-link:focus {
     color: #35acdf;
@@ -349,8 +354,7 @@ h1 {
 
 h2 {
     font-size: 24px;
-    border-left: 2px solid #6cd4fe;
-    color: #a7a7a7;
+    color: white;
     padding-left: 20px;
 }
 
@@ -504,7 +508,8 @@ body.is-not-admin [data-role='admin'] {
     padding-left: 20px;
 }
 
-.form-label strong {
+.form-label strong,
+.form-label small {
     padding-right: 10px;
 }
 
@@ -522,6 +527,7 @@ body.is-not-admin [data-role='admin'] {
     color: #333333;
     margin-bottom: 10px;
     font-size: 90%;
+    white-space: nowrap;
 }
 
 .log-window time {
@@ -572,14 +578,29 @@ body.is-not-admin [data-role='admin'] {
     border: 0;
 }
 
-.index-server p {
-    padding-bottom: 25px;
-    color: #9cd3ff;
+.form-input {
+    position: relative;
 }
 
-input:invalid, select:invalid, textarea:invalid, button.invalid {
-    border: 2px solid red !important;
-    background-color: #ffd7e0;
+input:invalid + span,
+select:invalid + span,
+textarea:invalid + span{
+    height: 0;
+    display: block;
+    width:100%;
+}
+
+input:invalid + span:after,
+select:invalid + span:after,
+textarea:invalid + span:after {
+    font-family: 'Glyphicons Halflings';
+    content: "\e107";
+    font-weight: normal;
+    font-size: 20px;
+    position: absolute;
+    right: -30px;
+    top: 10px;
+    color: #ffaeb3;
 }
 
 form {
@@ -671,7 +692,7 @@ form {
     font-size: 120%;
 }
 
-.filebrowser .icons span{
+.filebrowser .icons span {
     margin-right: 5px;
 }
 
@@ -684,6 +705,6 @@ form {
     margin-bottom: 10px;
 }
 
-.pointer{
+.pointer {
     cursor: pointer;
 }

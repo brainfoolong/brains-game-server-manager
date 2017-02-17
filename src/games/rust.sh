@@ -4,7 +4,6 @@
 LABEL=Rust
 BASEDIR=$(dirname "$0")
 PIDFILE="$BASEDIR/server.pid"
-FIFOFILE="$BASEDIR/server.fifo"
 cd "${BASEDIR}"
 
 case "$1" in
@@ -28,15 +27,13 @@ case "$1" in
 			done
 			echo "!"
 		fi
-		if [ -e $FIFOFILE ]; then
-		    rm $FIFOFILE
-		fi
 		if [ -e $PIDFILE ]; then
 		    rm $PIDFILE
 		fi
-		mkfifo $FIFOFILE
+		cd $BASEDIR/rust
+        export LD_LIBRARY_PATH=$BASEDIR/rust:$BASEDIR/server/RustDedicated:$BASEDIR/server/RustDedicated_Data:$LD_LIBRARY_PATH;
 		echo "Starting $LABEL... "
-		$BASEDIR/RustDedicated -batchmode +server.ip 0.0.0.0  +server.port {_port_} +rcon.web {_rconweb_} +rcon.ip 0.0.0.0 +rcon.port {_rconport_} +rcon.password "{_rconpassword_}" +server.identity "{_id_}" +server.level "Procedural Map" > $BASEDIR/output.log 2> $BASEDIR/error.log < $BASEDIR/server.fifo &
+		./RustDedicated -batchmode -logfile ../output.log {_params_} +server.level "Procedural Map" &
 		PID=$!
 		ps -p ${PID} > /dev/null 2>&1
 		if [ "$?" -ne "0" ]; then
@@ -44,7 +41,6 @@ case "$1" in
 		else
 			echo $PID > $PIDFILE
 			echo "$LABEL booting now. See logs for details."
-		    echo -n "." > $FIFOFILE
 		fi
 	;;
 	stop)

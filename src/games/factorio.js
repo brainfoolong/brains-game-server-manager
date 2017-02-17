@@ -32,7 +32,7 @@ factorio.onCustomFrontendMessage = function (serverId, message, callback) {
             var noteMessage = "index.factorio.map.deletion-scheduled";
             var noteType = "info";
             if (server.factorio.map == message.map) {
-                factorio.stopServer(serverId, function () {
+                gameserver.stopServer(serverId, function () {
                     factorio.deleteMap(serverId, message.map);
                 });
             } else {
@@ -127,9 +127,10 @@ factorio.deleteMap = function (id, map) {
  * Check all requirements to be able to install and use factorio
  * Return note object if anything gone wrong
  * @param {string} id
+ * @param {string} context
  * @return {object|boolean}
  */
-factorio.checkRequirements = function (id) {
+factorio.checkRequirements = function (id, context) {
     var server = db.get("servers").get(id).value();
     var settings = db.get("settings").value();
     var note = null;
@@ -142,7 +143,7 @@ factorio.checkRequirements = function (id) {
         note = "missing.requirements";
         noteParams = {"app": "unzip"};
     }
-    if(!server.factorio.map){
+    if(!server.factorio.map && context != "updateServer"){
         note = "index.factorio.missing.map";
     }
     if(!note){
@@ -201,7 +202,7 @@ factorio.updateServer = function (id, callback) {
     factorio.getLatestVersion(id, serverData.factorio.branch, function (version) {
         factorio.getDownloadLink(id, version, function (url) {
             var lastLength = 0;
-            factorio.stopServer(id, function () {
+            gameserver.stopServer(id, function () {
                 var serverFolder = gameserver.getFolder(id);
                 var factorioFolder = serverFolder + "/factorio";
                 var tmpFolder = serverFolder + "/../tmp";

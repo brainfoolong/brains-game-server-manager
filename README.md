@@ -3,3 +3,9 @@ Host your own linux game servers with ease. Don't hack in the command line anymo
 
 # Progress
 No function yet at all. Currently in development. `Watch` the repository to get updates when a first usable alpha is out.
+
+# Prerequisites
+
+    sudo apt-get install nodejs tar unzip screen steamcmd
+
+# Installation

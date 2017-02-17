@@ -1,6 +1,7 @@
 "use strict";
 View.script = function (message) {
-    Form.create($(".form"), "login", {
+    var $form = $(".form");
+    Form.create($form, "login", {
         "username": {"type": "text", "required": true},
         "password": {"type": "password", "required": true},
         "remember": {"type": "switch"}
@@ -15,4 +16,6 @@ View.script = function (message) {
             }
         });
     });
+
+    $form.find(".submit-form").text(t("login.btn"))
 };

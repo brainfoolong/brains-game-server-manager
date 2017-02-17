@@ -33,7 +33,7 @@ module.exports = function (user, frontendMessage, callback) {
             server = servers[frontendMessage.id];
             serverFolder = gameserver.getFolder(frontendMessage.id);
             game = gameserver.getGame(server.game);
-            requirementsCheck = game.checkRequirements(frontendMessage.id);
+            requirementsCheck = game.checkRequirements(frontendMessage.id, frontendMessage.action);
         }
         switch (frontendMessage.action) {
             case "updateServer":
@@ -218,11 +218,12 @@ module.exports = function (user, frontendMessage, callback) {
                 var filePath = serverFolder + "/" + frontendMessage.file + ".log";
                 if (fs.existsSync(filePath)) {
                     callback({
-                        "log" : fs.readFileSync(filePath).toString(),
-                        "time" : fs.statSync(filePath).mtime
+                        "log": fs.readFileSync(filePath).toString(),
+                        "time": fs.statSync(filePath).mtime
                     });
                     if (frontendMessage.file != "console") {
                         fstools.tailFile(filePath, function (data) {
+                            if (!data.trim().length) return;
                             for (var j = 0; j < WebSocketUser.instances.length; j++) {
                                 var user = WebSocketUser.instances[j];
                                 user.send(frontendMessage.file + "-tail", {

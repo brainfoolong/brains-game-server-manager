@@ -69,7 +69,7 @@ View.script = function () {
                 View.send({"action": "saveMap", "id": get("id"), "map": get("map"), "formData": formData}, function () {
                     View.loadUrl("/index?id=" + get("id"));
                 });
-            }, mapsData[get("map")]);
+            }, mapsData ? mapsData[get("map")] : null);
 
             if (get("map")) {
                 scrollTo("body", "#form-factoriomaps");
