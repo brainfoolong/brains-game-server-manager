@@ -103,10 +103,10 @@ rust.createConfig = function (id) {
         "rcon.ip": serverData.rust.rcon_ip,
         "rcon.port": serverData.rust.rcon_port,
         "rcon.password": serverData.rust.rcon_password,
-        "server.identity": '"' + serverData.rust.id + '"',
+        "server.identity": serverData.rust.id,
         "server.maxplayers": serverData.rust.maxplayers,
-        "server.hostname": '"' + serverData.rust.hostname + '"',
-        "server.description": '"' + serverData.rust.description.replace(/\n/g, "\\n") + '"',
+        "server.hostname": serverData.rust.hostname,
+        "server.description": serverData.rust.description,
         "server.headerimage": serverData.rust.headerimage,
         "server.url": serverData.rust.url,
         "server.seed": serverData.rust.seed,
@@ -118,9 +118,9 @@ rust.createConfig = function (id) {
     };
     var paramsStr = "";
     for (var i in params) {
-        paramsStr += "+" + i + " " + params[i] + " ";
+        paramsStr += "+" + i + " \"" + params[i].toString().replace(/\n/g, "\\n").replace(/"/g, "\\\"") + "\" ";
     }
-    templateData = templateData.replace(new RegExp("{_params_}", "i"), paramsStr);
+    templateData = templateData.replace(new RegExp("{_params_}", "i"), paramsStr).replace(/\{_id_\}/g, id);
     fs.writeFile(serverFolder + "/server.sh", templateData, {"mode": 0o777});
 };
 

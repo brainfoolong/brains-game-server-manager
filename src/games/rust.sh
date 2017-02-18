@@ -31,9 +31,9 @@ case "$1" in
 		    rm $PIDFILE
 		fi
 		cd $BASEDIR/rust
-        export LD_LIBRARY_PATH=$BASEDIR/rust:$BASEDIR/server/RustDedicated:$BASEDIR/server/RustDedicated_Data:$LD_LIBRARY_PATH;
+        export LD_LIBRARY_PATH=$BASEDIR/rust:$BASEDIR/rust/RustDedicated:$BASEDIR/rust/RustDedicated_Data:$LD_LIBRARY_PATH;
 		echo "Starting $LABEL... "
-		./RustDedicated -batchmode -logfile ../output.log {_params_} +server.level "Procedural Map" &
+		screen -d -m -S rust ./RustDedicated -batchmode -logfile ../output.log {_params_} +server.level "Procedural Map"
 		PID=$!
 		ps -p ${PID} > /dev/null 2>&1
 		if [ "$?" -ne "0" ]; then
