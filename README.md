@@ -1,3 +1,6 @@
+# Project discontinued
+I no longer work on this project because hard to solve problems. I keep it online for historical reasons.
+
 # Brains Game Server Manager
 Host your own linux game servers with ease. Don't hack in the command line anymore. Easy install, update, start, stop and monitor your servers in a comfortable webinterface, from any device.
 
